@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "444915613629",
+    "firebase_url": "https://test-fb-cloud-new.firebaseio.com",
+    "project_id": "test-fb-cloud-new",
+    "storage_bucket": "test-fb-cloud-new.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:444915613629:android:8394a10b41cd241c",
+        "android_client_info": {
+          "package_name": "com.example.kevin.eventapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "444915613629-d88hoe4kvsbvanng6soerlm7biecm6ri.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC9B74gUzBJYUyjoTb8AhfDlrmCHpHUKBA"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
