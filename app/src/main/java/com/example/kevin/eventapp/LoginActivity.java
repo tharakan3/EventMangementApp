@@ -94,9 +94,10 @@ public class LoginActivity extends AppCompatActivity {
                                 String password = (String)docs.get("password");
                                 if(password.equals(mPasswordView.getText().toString()))
                                 {
-                                    int1 = new Intent(getApplicationContext(),Profile.class);
+                                    /*int1 = new Intent(getApplicationContext(),Profile.class);
                                     int1.putExtra("userId",(String)docs.get("userId"));
-                                    startActivity(int1);
+                                    startActivity(int1);*/
+                                    startActivity(new Intent(getApplicationContext(),EventInviteActivity.class));
                                 }
 
                                 //Event event = (Event) doc.get(document.getId());

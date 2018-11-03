@@ -6,6 +6,7 @@ import android.app.Dialog;
 import android.app.TimePickerDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.DialogFragment;
@@ -26,9 +27,13 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 import com.nbsp.materialfilepicker.MaterialFilePicker;
 import com.nbsp.materialfilepicker.ui.FilePickerActivity;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -60,6 +65,7 @@ public class EventActivity extends AppCompatActivity {
     public static final int FILE_PICKER_REQUEST_CODE = 1;
 
     FirebaseFirestore db = FirebaseFirestore.getInstance();
+    FirebaseStorage storage = FirebaseStorage.getInstance();
 
 
     @Override
@@ -82,7 +88,7 @@ public class EventActivity extends AppCompatActivity {
         mAddImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                checkPermissionsAndOpenFilePicker();
             }
         });
 
@@ -106,9 +112,11 @@ public class EventActivity extends AppCompatActivity {
 
                 //event.setDate();
                 List<String> userids = new ArrayList<String>();
+                List<String> invitees = new ArrayList<String>();
                 userids.add(userid);
                 event.setOrganiserId(userid);
                 event.setUsers(userids);
+                event.setInvitees(invitees);
                 db.collection("Events")
                         .add(event)
                         .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
@@ -258,6 +266,34 @@ public class EventActivity extends AppCompatActivity {
             if (path != null) {
                 Log.d("Path: ", path);
                 Toast.makeText(this, "Picked file: " + path, Toast.LENGTH_LONG).show();
+                StorageReference storageRef = storage.getReference();
+                StorageReference spaceRef = storageRef.child(userid+mEventName.getText());
+
+
+                String name = "testimage";
+
+                StorageReference imgref = spaceRef.child(name);
+                //upload the file to cloud storage
+
+                Uri file = Uri.fromFile(new File(path));
+                StorageReference riversRef = storageRef.child("images/"+file.getLastPathSegment());
+                UploadTask uploadTask = imgref.putFile(file);
+
+// Register observers to listen for when the download is done or if it fails
+                uploadTask.addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception exception) {
+                        // Handle unsuccessful uploads
+                    }
+                }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                        // taskSnapshot.getMetadata() contains file metadata such as size, content-type, etc.
+                        // ...
+                        Log.d("Activity1: ", "Added file: " + taskSnapshot.getMetadata().getName().toString());
+
+                    }
+                });
             }
         }
     }

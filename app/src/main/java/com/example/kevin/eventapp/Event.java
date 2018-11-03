@@ -12,6 +12,16 @@ public class Event {
     private String tags;
     private Date date;
 
+    public List<String> getInvitees() {
+        return invitees;
+    }
+
+    public void setInvitees(List<String> invitees) {
+        this.invitees = invitees;
+    }
+
+    private List<String> invitees;
+
     public String getEventId() {
         return eventId;
     }
