@@ -1,5 +1,7 @@
 package com.example.kevin.eventapp;
 
+import com.google.firebase.firestore.GeoPoint;
+
 import java.util.Date;
 import java.util.List;
 
@@ -11,6 +13,11 @@ public class Event {
     private String name;
     private String tags;
     private Date date;
+    private String eventId;
+    private List<String> invitees;
+    private List<String> users;
+    private String organiserId;
+    private GeoPoint location;
 
     public String getEventId() {
         return eventId;
@@ -20,8 +27,6 @@ public class Event {
         this.eventId = eventId;
     }
 
-    private String eventId;
-
     public List<String> getUsers() {
         return users;
     }
@@ -30,8 +35,6 @@ public class Event {
         this.users = users;
     }
 
-    private List<String> users;
-
     public String getOrganiserId() {
         return organiserId;
     }
@@ -39,8 +42,6 @@ public class Event {
     public void setOrganiserId(String organiserId) {
         this.organiserId = organiserId;
     }
-
-    private String organiserId;
 
     public String getName() {
         return name;
@@ -66,5 +67,19 @@ public class Event {
         this.date = date;
     }
 
+    public List<String> getInvitees() {
+        return invitees;
+    }
 
+    public void setInvitees(List<String> invitees) {
+        this.invitees = invitees;
+    }
+
+    public GeoPoint getLocation() {
+        return location;
+    }
+
+    public void setLocation(GeoPoint location) {
+        this.location = location;
+    }
 }
