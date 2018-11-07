@@ -3,6 +3,7 @@ package com.example.kevin.eventapp;
 
 
 import java.util.Date;
+import java.util.List;
 
 public class User {
 
@@ -14,6 +15,16 @@ public class User {
     private String email;
     private String password;
     private String userId;
+
+    public List<String> getFriends() {
+        return friends;
+    }
+
+    public void setFriends(List<String> friends) {
+        this.friends = friends;
+    }
+
+    private List<String> friends;
     //private boolean organiser;
 
     public String getName() {
