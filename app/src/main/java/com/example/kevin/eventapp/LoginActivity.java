@@ -73,7 +73,7 @@ public class LoginActivity extends AppCompatActivity {
         mRegisterButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                int1 = new Intent(getApplicationContext(),MainActivity.class);
+                int1 = new Intent(getApplicationContext(),MapScreen.class);
                 startActivity(int1);
             }
         });
