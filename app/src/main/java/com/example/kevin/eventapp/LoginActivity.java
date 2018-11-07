@@ -56,6 +56,7 @@ public class LoginActivity extends AppCompatActivity {
     private EditText mUserNameView;
     private Button mSigninButton;
     private Button mRegisterButton;
+    public static Session session;
     Intent int1;
     FirebaseFirestore db = FirebaseFirestore.getInstance();
     @Override
@@ -63,7 +64,7 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         // Set up the login form.
-
+        session = new Session(getApplicationContext());
         mPasswordView = (EditText) findViewById(R.id.passwordLogin);
         mUserNameView = (EditText) findViewById(R.id.usernameLogin);
 
@@ -94,10 +95,17 @@ public class LoginActivity extends AppCompatActivity {
                                 String password = (String)docs.get("password");
                                 if(password.equals(mPasswordView.getText().toString()))
                                 {
-                                    /*int1 = new Intent(getApplicationContext(),Profile.class);
+
+                                    session.setuserId(document.getId());
+
+                                    int1 = new Intent(getApplicationContext(),Profile.class);
+                                    //int1.putExtra("userId",(String)docs.get("userId"));
+                                    startActivity(int1);
+
+                                   /* int1 = new Intent(getApplicationContext(),EventActivity.class);
                                     int1.putExtra("userId",(String)docs.get("userId"));
                                     startActivity(int1);*/
-                                    startActivity(new Intent(getApplicationContext(),EventInviteActivity.class));
+                                    //startActivity(new Intent(getApplicationContext(),EventInviteActivity.class));
                                 }
 
                                 //Event event = (Event) doc.get(document.getId());

@@ -78,7 +78,7 @@ public class EventViewActivity extends AppCompatActivity {
 
         mEventName = (EditText) findViewById(R.id.eventName);
 
-        mTags = (EditText) findViewById(R.id.tagNames);
+        //mTags = (EditText) findViewById(R.id.tagNames);
 
         startDate = (TextView) findViewById(R.id.startDate);
         calendar = Calendar.getInstance();

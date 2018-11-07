@@ -19,6 +19,8 @@ import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -42,67 +44,63 @@ public class EventInviteActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_event_invite);
         mInviteButton = (Button)findViewById(R.id.invite);
-        CollectionReference userRef = db.collection("usersnew");
-        userRef.document(userId).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                if (task.isSuccessful()) {
-                    DocumentSnapshot document = task.getResult();
-                    if (document.exists()) {
-                        Log.d("Activity1", "DocumentSnapshot data: " + document.getData());
-                        Map<String, Object> docs = document.getData();
-                        ArrayList<String> friends = (ArrayList)docs.get("friends");
-                        ArrayList<String> friendNames = (ArrayList)docs.get("friendNames");
-                        final HashMap<String, String> nameIdMap = new HashMap<String, String>();
-                        for(int i = 0; i<friends.size();i++){
-                            nameIdMap.put(friendNames.get(i), friends.get(i));
-                        }
-
-                        autocomplete = findViewById(R.id.autoCompleteTextView1);
-
-                        ArrayList<String> names = new ArrayList<>();
-
-                        final ArrayAdapter<String> adapter = new ArrayAdapter<String>
-                                (EventInviteActivity.this,android.R.layout.select_dialog_item, friendNames);
+        //CollectionReference userRef = db.collection("usersnew");
 
 
-//+        autocomplete.setThreshold(2);
-                        autocomplete.setAdapter(adapter);
-                        autocomplete.setTokenizer(new MultiAutoCompleteTextView.CommaTokenizer());
-
-                        mInviteButton.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View view) {
-                                String [] names = autocomplete.getText().toString().split(", ");
-                                String[] id = new String[nameIdMap.size()];
-
-                                for(int i = 0 ; i < names.length ;i++)
-                                {
-                                    id[i]=  nameIdMap.get(names[i]);
-                                }
-                                db.collection("Events").document(eventId).update("users", FieldValue.arrayUnion(id)).addOnSuccessListener(new OnSuccessListener<Void>() {
-                                    @Override
-                                    public void onSuccess(Void aVoid) {
-                                        Log.d("Acitivity1", "DocumentSnapshot successfully updated!");
-
-                                    }
-                                })
-                                        .addOnFailureListener(new OnFailureListener() {
-                                            @Override
-                                            public void onFailure(@NonNull Exception e) {
-                                                Log.w("", "Error updating document", e);
-                                            }
-                                        });
+        db.collection("usersnew")
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            final HashMap<String, String> nameIdMap = new HashMap<String, String>();
+                            ArrayList<String> names = new ArrayList<>();
+                            for (QueryDocumentSnapshot document : task.getResult()) {
+                                Log.d("", document.getId() + " => " + document.getData());
+                                nameIdMap.put(document.get("name").toString(), document.getId());
+                                names.add(document.get("name").toString());
                             }
-                        });
-                    } else {
-                        Log.d("Activity1", "No such document");
+
+                            autocomplete = findViewById(R.id.autoCompleteTextView1);
+                            final ArrayAdapter<String> adapter = new ArrayAdapter<String>
+                                    (EventInviteActivity.this,android.R.layout.select_dialog_item, names);
+
+                            autocomplete.setAdapter(adapter);
+                            autocomplete.setTokenizer(new MultiAutoCompleteTextView.CommaTokenizer());
+
+                            mInviteButton.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View view) {
+                                    String [] names = autocomplete.getText().toString().split(", ");
+                                    String[] id = new String[nameIdMap.size()];
+
+                                    for(int i = 0 ; i < names.length ;i++)
+                                    {
+                                        id[i]=  nameIdMap.get(names[i]);
+                                    }
+                                    db.collection("Events").document(eventId).update("invitees", FieldValue.arrayUnion(id)).addOnSuccessListener(new OnSuccessListener<Void>() {
+                                        @Override
+                                        public void onSuccess(Void aVoid) {
+                                            Log.d("Acitivity1", "DocumentSnapshot successfully updated!");
+
+                                        }
+                                    })
+                                            .addOnFailureListener(new OnFailureListener() {
+                                                @Override
+                                                public void onFailure(@NonNull Exception e) {
+                                                    Log.w("", "Error updating document", e);
+                                                }
+                                            });
+                                }
+                            });
+
+
+
+                        } else {
+                            Log.d("", "Error getting documents: ", task.getException());
+                        }
                     }
-                } else {
-                    Log.d("Activity1", "get failed with ", task.getException());
-                }
-            }
-        });
+                });
 
     }
 }

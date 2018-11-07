@@ -16,20 +16,26 @@ import android.os.Bundle;
 import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.google.type.LatLng;
 import com.nbsp.materialfilepicker.MaterialFilePicker;
 import com.nbsp.materialfilepicker.ui.FilePickerActivity;
 
@@ -40,7 +46,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.regex.Pattern;
 
-public class EventActivity extends AppCompatActivity {
+public class EventActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
     // UI references.
     private EditText mEventName;
@@ -51,7 +57,9 @@ public class EventActivity extends AppCompatActivity {
 
     private DatePicker datePicker;
     private Calendar calendar;
+    static private Calendar date;
     private TextView startDate;
+    private static EditText time;
     private int year, month, day;
     private static int hour, minute;
 
@@ -61,6 +69,7 @@ public class EventActivity extends AppCompatActivity {
 
     private Event event;
 
+    String tag;
     public static final int PERMISSIONS_REQUEST_CODE = 0;
     public static final int FILE_PICKER_REQUEST_CODE = 1;
 
@@ -77,12 +86,14 @@ public class EventActivity extends AppCompatActivity {
 
         mEventName = (EditText) findViewById(R.id.eventName);
 
-        mTags = (EditText) findViewById(R.id.tagNames);
+        //mTags = (EditText) findViewById(R.id.tagNames);
 
         startDate = (TextView) findViewById(R.id.startDate);
         calendar = Calendar.getInstance();
+        date = calendar.getInstance();
         year = calendar.get(Calendar.YEAR);
 
+        time = (EditText) findViewById(R.id.time_newevent);
         mAddImageButton = (Button) findViewById(R.id.add_image);
 
         mAddImageButton.setOnClickListener(new View.OnClickListener() {
@@ -101,6 +112,17 @@ public class EventActivity extends AppCompatActivity {
             }
         });
 
+        //get the spinner from the xml.
+        Spinner dropdown = findViewById(R.id.tagList);
+//create a list of items for the spinner.
+        String[] tags = new String[]{"tag1", "tag2", "tag3"};
+//create an adapter to describe how the items are displayed, adapters are used in several places in android.
+//There are multiple variations of this, but this is the basic variant.
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, tags);
+//set the spinners adapter to the previously created one.
+        dropdown.setAdapter(adapter);
+
+        tag = dropdown.getSelectedItem().toString();
         mAddEventButton = (Button) findViewById(R.id.add_event);
 
         mAddEventButton.setOnClickListener(new View.OnClickListener() {
@@ -108,7 +130,7 @@ public class EventActivity extends AppCompatActivity {
             public void onClick(View view) {
                 event = new Event();
                 event.setName(mEventName.getText().toString());
-                event.setTags(mTags.getText().toString());
+                //event.setTags(mTags.getText().toString());
 
                 //event.setDate();
                 List<String> userids = new ArrayList<String>();
@@ -117,6 +139,10 @@ public class EventActivity extends AppCompatActivity {
                 event.setOrganiserId(userid);
                 event.setUsers(userids);
                 event.setInvitees(invitees);
+                event.setDate(new Date(date.getTimeInMillis()));
+                event.setLocation(new GeoPoint(13.1067,80.0970));
+                //event.setTags();
+
                 db.collection("Events")
                         .add(event)
                         .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
@@ -178,6 +204,9 @@ public class EventActivity extends AppCompatActivity {
             };
 
     private void showDate(int year, int month, int day) {
+        date.set(Calendar.DAY_OF_MONTH, day);
+        date.set(Calendar.MONTH, month-1);
+        date.set(Calendar.YEAR, year);
         startDate.setText(new StringBuilder().append(day).append("/")
                 .append(month).append("/").append(year));
     }
@@ -197,6 +226,7 @@ public class EventActivity extends AppCompatActivity {
             int hour = c.get(Calendar.HOUR_OF_DAY);
             int minute = c.get(Calendar.MINUTE);
 
+
             // Create a new instance of TimePickerDialog and return it
             return new TimePickerDialog(getActivity(), this, hour, minute,
                     DateFormat.is24HourFormat(getActivity()));
@@ -204,8 +234,11 @@ public class EventActivity extends AppCompatActivity {
 
         public void onTimeSet(TimePicker view, int hourOfDay, int minuteOfDay) {
             // Do something with the time chosen by the user
+            time.setText("" + hourOfDay +":" + minuteOfDay);
             hour = hourOfDay;
             minute = minuteOfDay;
+            date.set(Calendar.HOUR, hour);
+            date.set(Calendar.MINUTE, minuteOfDay);
 
         }
 
@@ -297,5 +330,17 @@ public class EventActivity extends AppCompatActivity {
             }
         }
     }
+
+    public void onItemSelected(AdapterView<?> parent, View view,
+                               int pos, long id) {
+        // An item was selected. You can retrieve the selected item using
+        tag = parent.getItemAtPosition(pos).toString();
+    }
+
+    public void onNothingSelected(AdapterView<?> parent) {
+        // Another interface callback
+    }
+
+
 
 }

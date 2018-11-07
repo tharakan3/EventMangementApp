@@ -31,7 +31,6 @@ public class EventAdaptor extends RecyclerView.Adapter<EventAdaptor.EventViewhol
         public EventViewholder(View itemView) {
             super(itemView);
             ename = (TextView)itemView.findViewById(R.id.ename);
-            edel = (Button)itemView.findViewById(R.id.edel);
             eview = (Button)itemView.findViewById(R.id.eview);
 
         }
@@ -55,18 +54,11 @@ public class EventAdaptor extends RecyclerView.Adapter<EventAdaptor.EventViewhol
         Log.d("Activity1", " "+ position);
         final Event eve = listitem.get(position);
         holder.ename.setText(eve.getName());
-        holder.edel.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                    db.collection("Events").document(eve.getEventId()).delete();
-                    Intent intent = new Intent(cont, Profile.class);
-                    intent.putExtra("eventId", eve.getEventId());
-                    cont.startActivity(intent);
-            }
-        });
+
         holder.eview.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                LoginActivity.session.setEventId(eve.getEventId());
                 Intent intent = new Intent(cont, UpdateEvent.class);
                 intent.putExtra("eventId", eve.getEventId());
                 intent.putExtra("userId", eve.getOrganiserId());
