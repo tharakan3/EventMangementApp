@@ -6,6 +6,8 @@ import android.app.Dialog;
 import android.app.TimePickerDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -26,8 +28,10 @@ import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -35,11 +39,12 @@ import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
-import com.google.type.LatLng;
 import com.nbsp.materialfilepicker.MaterialFilePicker;
 import com.nbsp.materialfilepicker.ui.FilePickerActivity;
+import com.google.android.gms.maps.model.LatLng;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -54,7 +59,8 @@ public class EventActivity extends AppCompatActivity implements AdapterView.OnIt
     private View mEventView;
     private View mLoginFormView;
     private EditText mUserName;
-
+    private EditText address;
+    Geocoder geo;
     private DatePicker datePicker;
     private Calendar calendar;
     static private Calendar date;
@@ -62,7 +68,8 @@ public class EventActivity extends AppCompatActivity implements AdapterView.OnIt
     private static EditText time;
     private int year, month, day;
     private static int hour, minute;
-
+    List<Address> addressList;
+    Address e1;
     private Button mAddEventButton, msetTimeButton, mAddImageButton;
 
     private String userid;
@@ -82,7 +89,12 @@ public class EventActivity extends AppCompatActivity implements AdapterView.OnIt
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_event);
 
-        userid = getIntent().getStringExtra("userId");
+        //userid = getIntent().getStringExtra("userId");
+        userid = LoginActivity.session.getuserId();
+        address = findViewById(R.id.addr);
+
+
+        geo = new Geocoder(getApplicationContext());
 
         mEventName = (EditText) findViewById(R.id.eventName);
 
@@ -131,7 +143,14 @@ public class EventActivity extends AppCompatActivity implements AdapterView.OnIt
                 event = new Event();
                 event.setName(mEventName.getText().toString());
                 //event.setTags(mTags.getText().toString());
-
+                String adr = address.getText().toString();
+                try {
+                    addressList = geo.getFromLocationName(adr,3);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                e1 = addressList.get(0);
+                final LatLng e2 = new LatLng(e1.getLatitude(),e1.getLongitude());
                 //event.setDate();
                 List<String> userids = new ArrayList<String>();
                 List<String> invitees = new ArrayList<String>();
@@ -141,6 +160,8 @@ public class EventActivity extends AppCompatActivity implements AdapterView.OnIt
                 event.setInvitees(invitees);
                 event.setDate(new Date(date.getTimeInMillis()));
                 event.setLocation(new GeoPoint(13.1067,80.0970));
+                event.setAddress(address.getText().toString());
+                event.setLocation(new GeoPoint(e2.latitude, e2.longitude));
                 //event.setTags();
 
                 db.collection("Events")
@@ -151,10 +172,15 @@ public class EventActivity extends AppCompatActivity implements AdapterView.OnIt
                                 Log.d("Activity1", "DocumentSnapshot added with ID: " + documentReference.getId());
                                 String eventid = documentReference.getId().toString();
                                 event.setEventId(eventid);
-                                db.collection("Events").document(eventid).set(event);
-                                Intent second = new Intent(getApplicationContext(),SearchEvent.class);
-                                second.putExtra("userId",userid);
-                                startActivityForResult(second,0);
+                                db.collection("Events").document(eventid).set(event).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                    @Override
+                                    public void onComplete(@NonNull Task<Void> task) {
+                                        Intent second = new Intent(getApplicationContext(),Profile.class);
+                                        second.putExtra("userId",userid);
+                                        startActivityForResult(second,0);
+                                    }
+                                });
+
                             }
                         })
                         .addOnFailureListener(new OnFailureListener() {

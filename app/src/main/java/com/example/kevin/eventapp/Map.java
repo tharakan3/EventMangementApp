@@ -19,6 +19,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -47,6 +48,8 @@ import java.util.Objects;
 
 import javax.net.ssl.HttpsURLConnection;
 
+import static com.google.common.collect.Iterables.size;
+
 
 /**
  * A simple {@link Fragment} subclass.
@@ -67,6 +70,11 @@ public class Map extends android.support.v4.app.Fragment implements OnMapReadyCa
     LatLng l2;
     Location l1;
     double m1,m2,n1,n2;
+    int flag =0;
+    CameraPosition Liberty;
+    Event e1;
+    double x,y;
+
 
     public Map() {
         // Required empty public constructor
@@ -105,7 +113,15 @@ public class Map extends android.support.v4.app.Fragment implements OnMapReadyCa
                     // for ActivityCompat#requestPermissions for more details.
                     return;
                 }
+
                 l2 = new LatLng(location.getLatitude(), location.getLongitude());
+
+                if (flag == 0) {
+
+                    flag = 1;
+                    CameraPosition Liberty = CameraPosition.builder().target(l2).zoom(15).build();
+                    mGoogleMap.moveCamera(CameraUpdateFactory.newCameraPosition(Liberty));
+                }
             }
 
             @Override
@@ -160,20 +176,20 @@ public class Map extends android.support.v4.app.Fragment implements OnMapReadyCa
             return;
 
         }
-        l1 = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        l2 = new LatLng(13.545, 60.23);
         googleMap.setMyLocationEnabled(true);
-
+        x = 13.00;
+        y = 80.00;
         //googleMap.addMarker(new MarkerOptions().position(new LatLng(40.689247,-74.044502))).setTitle("Bingo");
-        CameraPosition Liberty = CameraPosition.builder().target(l2).zoom(15).bearing(0).build();
-        googleMap.moveCamera(CameraUpdateFactory.newCameraPosition(Liberty));
+        int l =  size(MapScreen.events);
+
+
         try {
             addressList = geo.getFromLocationName(Home[0], 3);
             if (addressList != null) {
                 uevent = addressList.get(0);
                 le = new LatLng(uevent.getLatitude(), uevent.getLongitude());
                 eventMarker.position(le);
-                eventMarker.title("Home");
+                eventMarker.title("Party at Fisher");
                 eventMarker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
                 googleMap.addMarker(eventMarker);
 
@@ -185,7 +201,7 @@ public class Map extends android.support.v4.app.Fragment implements OnMapReadyCa
                 uevent = addressList.get(0);
                 le = new LatLng(uevent.getLatitude(), uevent.getLongitude());
                 eventMarker.position(le);
-                eventMarker.title("Home");
+                eventMarker.title("Party at Caldwell");
                 eventMarker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
                 googleMap.addMarker(eventMarker);
 
@@ -202,7 +218,7 @@ public class Map extends android.support.v4.app.Fragment implements OnMapReadyCa
 
     @Override
     public boolean onMarkerClick(Marker marker) {
-        marker.setTitle("Event_name");
+
         LatLng Marker = marker.getPosition();
         m1 = Marker.latitude;
         m2 = Marker.longitude;

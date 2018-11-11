@@ -74,7 +74,7 @@ public class LoginActivity extends AppCompatActivity {
         mRegisterButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                int1 = new Intent(getApplicationContext(),MapScreen.class);
+                int1 = new Intent(getApplicationContext(),MainActivity.class);
                 startActivity(int1);
             }
         });
@@ -98,9 +98,19 @@ public class LoginActivity extends AppCompatActivity {
 
                                     session.setuserId(document.getId());
 
-                                    int1 = new Intent(getApplicationContext(),Profile.class);
-                                    //int1.putExtra("userId",(String)docs.get("userId"));
+                                    int1 = new Intent(getApplicationContext(),MapScreen.class);
                                     startActivity(int1);
+
+//                                    int1 = new Intent(getApplicationContext(),EventActivity.class);
+//                                    startActivity(int1);
+
+                                    /*int1 = new Intent(getApplicationContext(),SearchEvent.class);
+                                    startActivity(int1);*/
+
+
+//                                    int1 = new Intent(getApplicationContext(),Profile.class);
+//                                    //int1.putExtra("userId",(String)docs.get("userId"));
+//                                    startActivity(int1);
 
                                    /* int1 = new Intent(getApplicationContext(),EventActivity.class);
                                     int1.putExtra("userId",(String)docs.get("userId"));
