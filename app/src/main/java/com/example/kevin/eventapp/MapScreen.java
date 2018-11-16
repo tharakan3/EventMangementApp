@@ -26,7 +26,7 @@ public class MapScreen extends FragmentActivity {
         Bundle eventsBundle = getIntent().getExtras();
         if(eventsBundle != null){
             events = (ArrayList<Event>)getIntent().getSerializableExtra("eventlist");
-            Log.d("Activity1", events.get(0).getName());
+            //Log.d("Activity1", events.get(0).getName());
         }
 
 

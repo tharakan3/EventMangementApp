@@ -119,8 +119,8 @@ public class Map extends android.support.v4.app.Fragment implements OnMapReadyCa
                 if (flag == 0) {
 
                     flag = 1;
-                    CameraPosition Liberty = CameraPosition.builder().target(l2).zoom(15).build();
-                    mGoogleMap.moveCamera(CameraUpdateFactory.newCameraPosition(Liberty));
+                    //CameraPosition Liberty = CameraPosition.builder().target(l2).zoom(15).build();
+                    //mGoogleMap.moveCamera(CameraUpdateFactory.newCameraPosition(Liberty));
                 }
             }
 
@@ -181,7 +181,20 @@ public class Map extends android.support.v4.app.Fragment implements OnMapReadyCa
         y = 80.00;
         //googleMap.addMarker(new MarkerOptions().position(new LatLng(40.689247,-74.044502))).setTitle("Bingo");
         int l =  size(MapScreen.events);
+        if(MapScreen.events.size()>0) {
+            for(int i=0;i<MapScreen.events.size();i++) {
 
+
+                le = new LatLng(MapScreen.events.get(i).getLat(), MapScreen.events.get(i).getLng());
+                eventMarker.position(le);
+                eventMarker.title(MapScreen.events.get(i).getName());
+                eventMarker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+                googleMap.addMarker(eventMarker);
+
+                Liberty = CameraPosition.builder().target(le).zoom(15).build();
+                googleMap.moveCamera(CameraUpdateFactory.newCameraPosition(Liberty));
+            }
+        }
 
         try {
             addressList = geo.getFromLocationName(Home[0], 3);

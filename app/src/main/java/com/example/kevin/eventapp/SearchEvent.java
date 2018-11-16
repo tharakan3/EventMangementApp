@@ -77,7 +77,9 @@ public class SearchEvent extends AppCompatActivity {
         sDate = (EditText) findViewById(R.id.sdate_input);
         msetDateButton = (Button) findViewById((R.id.scal));
 
-        userid = LoginActivity.session.getuserId();
+        Session session = new Session(getApplicationContext());
+        //userid = LoginActivity.session.getuserId();
+        userid = session.getuserId();
 
         msetDateButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -92,15 +94,15 @@ public class SearchEvent extends AppCompatActivity {
         //le.add(e1);
 
         //String userid = getIntent().getStringExtra("userId");
-        String dateStr = sDate.getText().toString();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyy/mm/dd");
-        datefield  = null;
-        try {
-            if(dateStr != null && !"".equals(dateStr))
-                datefield = sdf.parse(dateStr);
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
+//        String dateStr = sDate.getText().toString();
+//        SimpleDateFormat sdf = new SimpleDateFormat("yyy/mm/dd");
+//        datefield  = null;
+//        try {
+//            if(dateStr != null && !"".equals(dateStr))
+//                datefield = sdf.parse(dateStr);
+//        } catch (ParseException e) {
+//            e.printStackTrace();
+//        }
 
         l3 = (LocationManager)this.getSystemService(Context.LOCATION_SERVICE);
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -129,6 +131,16 @@ public class SearchEvent extends AppCompatActivity {
                 search.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
+                        String dateStr = sDate.getText().toString();
+                        SimpleDateFormat sdf = new SimpleDateFormat("yyy/mm/dd");
+                        datefield  = null;
+                        try {
+                            if(dateStr != null && !"".equals(dateStr))
+                                datefield = sdf.parse(dateStr);
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
+
                         final String tags = stag.getText().toString();
                         final String name = sname.getText().toString();
                         CollectionReference eventsRef = db.collection("Events");
@@ -163,10 +175,11 @@ public class SearchEvent extends AppCompatActivity {
                                         Map<String, Object> docs = document.getData();
                                         //Event event = (Event) doc.get(document.getId());
                                         //if(docs.get("location") != null){
-                                            //GeoPoint gp = (GeoPoint) docs.get("location");
-                                            //Double dist = distanceTo(coordinates.latitude,gp.getLatitude(),coordinates.longitude, gp.getLongitude());
-                                            //Log.d("Activity1", dist.toString());
-                                            //if( (rangeinKm != null && coordinates != null && dist <= rangeinKm) || (rangeinKm == null || coordinates == null)){
+                                            GeoPoint gp = (GeoPoint) docs.get("location");
+                                            Double dist = distanceTo(coordinates.latitude,gp.getLatitude(),coordinates.longitude, gp.getLongitude());
+
+                                            Log.d("Activity1", dist.toString());
+                                            if( (rangeinKm != null && coordinates != null && dist <= rangeinKm) || (rangeinKm == null || coordinates == null)){
                                                 //Log.d("Activity1", (String)docs.get("tags"));
                                                 Event event = new Event();
                                                 if(docs.get("tags") != null)
@@ -178,12 +191,14 @@ public class SearchEvent extends AppCompatActivity {
                                                 if(docs.get("organiserId") != null)
                                                 event.setOrganiserId((String)docs.get("organiserId"));
 
-                                                if((docs.get("location") != null)){
-                                                    GeoPoint gp1 = (GeoPoint)docs.get("location");
-                                                   event.setLat(gp1.getLatitude());
+                                                if((docs.get("location") != null)) {
+                                                    GeoPoint gp1 = (GeoPoint) docs.get("location");
+                                                    event.setLat(gp1.getLatitude());
                                                     event.setLng(gp1.getLongitude());
+                                                }
+                                                events.add(event);
                                         }
-                                        events.add(event);
+
 
                                            // }
 
@@ -282,16 +297,19 @@ public class SearchEvent extends AppCompatActivity {
         /*return Math.acos(Math.sin(radLat) * Math.sin(location.radLat) +
                 Math.cos(radLat) * Math.cos(location.radLat) *
                         Math.cos(radLon - location.radLon)) * radius;*/
-        double earthRadius = 6371d; // in miles, change to 6371 for kilometer output
-        double dLat = Math.toRadians(lat2-lat1);
-        double dLng = Math.toRadians(lng2-lng1);
-        double sindLat = Math.sin(dLat / 2);
-        double sindLng = Math.sin(dLng / 2);
-        double a = Math.pow(sindLat, 2) + Math.pow(sindLng, 2) * Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2));
-        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        double dist = earthRadius * c;
-
-        return dist;
+//        double earthRadius = 6371d; // change to 6371 for kilometer output
+//        double dLat = Math.toRadians(lat2-lat1);
+//        double dLng = Math.toRadians(lng2-lng1);
+//        double sindLat = Math.sin(dLat / 2);
+//        double sindLng = Math.sin(dLng / 2);
+//        double a = Math.pow(sindLat, 2) + Math.pow(sindLng, 2) * Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2));
+//        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+//        double dist = earthRadius * c;
+//
+//        return dist;
+        float results[] = new float[10];
+        Location.distanceBetween(lat1,lng1,lat2,lng2,results);
+        return results[0]/1000d;
     }
 
 

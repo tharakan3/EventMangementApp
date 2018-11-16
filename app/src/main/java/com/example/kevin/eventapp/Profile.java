@@ -47,7 +47,8 @@ public class Profile extends AppCompatActivity {
         //name = getIntent().getStringExtra("username");
         //user.setText(name);
         Session session = new Session(getApplicationContext());
-        userid = LoginActivity.session.getuserId();
+        //userid = LoginActivity.session.getuserId();
+        userid = session.getuserId();
         Log.d("Activity1", "userid " + userid);
         /*search = (Button)findViewById(R.id.search);
         search.setOnClickListener(new View.OnClickListener() {
