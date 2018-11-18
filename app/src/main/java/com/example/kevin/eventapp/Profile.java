@@ -44,9 +44,11 @@ public class Profile extends AppCompatActivity {
         Log.d("Activity2", "onCreate: Activity Created");
         setContentView(R.layout.activity_profile);
         user = (TextView)findViewById(R.id.user_name);
-        name = getIntent().getStringExtra("username");
-        user.setText(name);
-        userid = LoginActivity.session.getuserId();
+        //name = getIntent().getStringExtra("username");
+        //user.setText(name);
+        Session session = new Session(getApplicationContext());
+        //userid = LoginActivity.session.getuserId();
+        userid = session.getuserId();
         Log.d("Activity1", "userid " + userid);
         /*search = (Button)findViewById(R.id.search);
         search.setOnClickListener(new View.OnClickListener() {
@@ -88,12 +90,16 @@ public class Profile extends AppCompatActivity {
                         Log.d("Activity1", document.getId() + " => " + document.getData());
                         Map<String, Object> docs = document.getData();
                         //Event event = (Event) doc.get(document.getId());
-                        Log.d("Activity1", (String)docs.get("tags"));
+                        //Log.d("Activity1", (String)docs.get("tags"));
                         Event event = new Event();
-                        event.setTags((String)docs.get("tags"));
-                        event.setName((String)docs.get("name"));
-                        event.setEventId((String)docs.get("eventId"));
-                        event.setOrganiserId((String)docs.get("organiserId"));
+                        if(docs.get("tags") != null)
+                            event.setTags((String)docs.get("tags"));
+                        if(docs.get("name") != null)
+                            event.setName((String)docs.get("name"));
+                        if(docs.get("eventId") != null)
+                            event.setEventId((String)docs.get("eventId"));
+                        if(docs.get("organiserId") != null)
+                            event.setOrganiserId((String)docs.get("organiserId"));
 
                         myEvents.add(event);
 
@@ -125,12 +131,16 @@ public class Profile extends AppCompatActivity {
                         Log.d("Activity1", document.getId() + " => " + document.getData());
                         Map<String, Object> docs = document.getData();
                         //Event event = (Event) doc.get(document.getId());
-                        Log.d("Activity1", (String)docs.get("tags"));
+                        //Log.d("Activity1", (String)docs.get("tags"));
                         Event event = new Event();
-                        event.setTags((String)docs.get("tags"));
-                        event.setName((String)docs.get("name"));
-                        event.setEventId((String)docs.get("eventId"));
-                        event.setOrganiserId((String)docs.get("organiserId"));
+                        if(docs.get("tags") != null)
+                            event.setTags((String)docs.get("tags"));
+                        if(docs.get("name") != null)
+                            event.setName((String)docs.get("name"));
+                        if(docs.get("eventId") != null)
+                            event.setEventId((String)docs.get("eventId"));
+                        if(docs.get("organiserId") != null)
+                            event.setOrganiserId((String)docs.get("organiserId"));
 
                         invites.add(event);
 

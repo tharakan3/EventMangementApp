@@ -11,15 +11,15 @@
         android:name="com.example.kevin.eventapp.location"
         android:layout_width="377dp"
         android:layout_height="477dp"
-        android:layout_marginBottom="4dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
+        android:layout_marginBottom="4dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintHorizontal_bias="0.307"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="1.0" />
+        app:layout_constraintVertical_bias="0.555" />
 
     <EditText
         android:id="@+id/search"

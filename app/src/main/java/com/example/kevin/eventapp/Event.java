@@ -1,11 +1,17 @@
 package com.example.kevin.eventapp;
 
+import android.annotation.SuppressLint;
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import com.google.firebase.firestore.GeoPoint;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
-public class Event {
+//@SuppressLint("ParcelCreator")
+public class Event implements Serializable {
 
     public Event(){
 
@@ -18,6 +24,8 @@ public class Event {
     private List<String> users;
     private String organiserId;
     private GeoPoint location;
+    private String address;
+    private double lat, lng;
 
     public String getEventId() {
         return eventId;
@@ -82,4 +90,38 @@ public class Event {
     public void setLocation(GeoPoint location) {
         this.location = location;
     }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public double getLat() {
+        return lat;
+    }
+
+    public void setLat(double lat) {
+        this.lat = lat;
+    }
+
+    public double getLng() {
+        return lng;
+    }
+
+    public void setLng(double lng) {
+        this.lng = lng;
+    }
+
+//    @Override
+//    public void writeToParcel(Parcel parcel, int i) {
+//
+//    }
+//
+//    @Override
+//    public int describeContents() {
+//        return 0;
+//    }
 }

@@ -31,6 +31,7 @@ import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -48,8 +49,11 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.GeoPoint;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
@@ -95,6 +99,7 @@ import com.google.firebase.firestore.QuerySnapshot;
         private View mProgressView;
         private View mLoginFormView;
         private EditText mUserName;
+        private List<Event> events;
         // Google Login.
 //    private FirebaseAuth mAuth;
 
@@ -153,11 +158,72 @@ import com.google.firebase.firestore.QuerySnapshot;
                                     String  userid = documentReference.getId().toString();
                                     Log.d("Activity1", "DocumentSnapshot added with ID: " + documentReference.getId());
                                     mNewUser.setUserId(userid);
+                                    events = new ArrayList<>();
                                     db.collection("usersnew").document(userid).set(mNewUser);
-                                    second = new Intent(getApplicationContext(),Profile.class);
-                                    second.putExtra("username",mUserName.getText().toString());
-                                    second.putExtra("userid",userid);
-                                    startActivityForResult(second,0);
+
+
+                                    LoginActivity.session.setuserId(userid);
+
+                                    CollectionReference eventsRef = db.collection("Events");
+                                    //final List<Event> events = new ArrayList<Event>();
+                                    Query query = eventsRef.whereArrayContains("users", userid);
+
+                                    query.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                                        @Override
+                                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                                            if (task.isSuccessful()) {
+                                                for (QueryDocumentSnapshot document : task.getResult()) {
+                                                    Log.d("Activity1", document.getId() + " => " + document.getData());
+                                                    Map<String, Object> docs = document.getData();
+                                                    //Event event = (Event) doc.get(document.getId());
+                                                    //if(docs.get("location") != null){
+                                                    //GeoPoint gp = (GeoPoint) docs.get("location");
+                                                    //Double dist = distanceTo(coordinates.latitude,gp.getLatitude(),coordinates.longitude, gp.getLongitude());
+                                                    //Log.d("Activity1", dist.toString());
+                                                    //if( (rangeinKm != null && coordinates != null && dist <= rangeinKm) || (rangeinKm == null || coordinates == null)){
+                                                    //Log.d("Activity1", (String)docs.get("tags"));
+                                                    Event event = new Event();
+                                                    if(docs.get("tags") != null)
+                                                        event.setTags((String)docs.get("tags"));
+                                                    if(docs.get("name") != null)
+                                                        event.setName((String)docs.get("name"));
+                                                    if(docs.get("eventId") != null)
+                                                        event.setEventId((String)docs.get("eventId"));
+                                                    if(docs.get("organiserId") != null)
+                                                        event.setOrganiserId((String)docs.get("organiserId"));
+
+                                                    if((docs.get("location") != null)){
+                                                        GeoPoint gp1 = (GeoPoint)docs.get("location");
+                                                        event.setLat(gp1.getLatitude());
+                                                        event.setLng(gp1.getLongitude());
+                                                    }
+                                                    events.add(event);
+
+                                                    // }
+
+                                                    //}
+
+
+
+                                                    //events.add(event);
+                                                }
+                                                Intent intent = new Intent(getApplicationContext(), MapScreen.class);
+                                                //Serializable eventList = (Serializable)events;
+                                                Bundle bundle = new Bundle();
+                                                bundle.putSerializable("eventlist", (Serializable) events);
+                                                intent.putExtras(bundle);
+                                                startActivity(intent);
+
+
+                                            } else {
+                                                Log.d("Activity1", "Error getting documents: ", task.getException());
+                                            }
+                                        }
+                                    });
+//                                    second = new Intent(getApplicationContext(),Profile.class);
+//                                    second.putExtra("username",mUserName.getText().toString());
+//                                    second.putExtra("userid",userid);
+//                                    startActivityForResult(second,0);
                                 }
                             })
                             .addOnFailureListener(new OnFailureListener() {

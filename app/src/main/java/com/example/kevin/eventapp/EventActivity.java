@@ -6,6 +6,8 @@ import android.app.Dialog;
 import android.app.TimePickerDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -18,32 +20,48 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.MultiAutoCompleteTextView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.GeoPoint;
+import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
-import com.google.type.LatLng;
 import com.nbsp.materialfilepicker.MaterialFilePicker;
 import com.nbsp.materialfilepicker.ui.FilePickerActivity;
+import com.google.android.gms.maps.model.LatLng;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 public class EventActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
@@ -54,7 +72,8 @@ public class EventActivity extends AppCompatActivity implements AdapterView.OnIt
     private View mEventView;
     private View mLoginFormView;
     private EditText mUserName;
-
+    private EditText address;
+    Geocoder geo;
     private DatePicker datePicker;
     private Calendar calendar;
     static private Calendar date;
@@ -62,27 +81,38 @@ public class EventActivity extends AppCompatActivity implements AdapterView.OnIt
     private static EditText time;
     private int year, month, day;
     private static int hour, minute;
-
+    List<Address> addressList;
+    Address e1;
     private Button mAddEventButton, msetTimeButton, mAddImageButton;
 
     private String userid;
 
     private Event event;
-
+    private String eventid = null;
     String tag;
     public static final int PERMISSIONS_REQUEST_CODE = 0;
     public static final int FILE_PICKER_REQUEST_CODE = 1;
 
     FirebaseFirestore db = FirebaseFirestore.getInstance();
     FirebaseStorage storage = FirebaseStorage.getInstance();
-
+    private Button mInviteButton;
+    MultiAutoCompleteTextView autocomplete;
+    private HashMap<String, String> nameIdMap;
+    private HashMap<String, String> idNameMap;
+    private Map<String, Object> eventMap;
+    private List<Event> events;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_event);
+        eventid = getIntent().getStringExtra("eventId");
+        //userid = getIntent().getStringExtra("userId");
+        userid = LoginActivity.session.getuserId();
+        address = findViewById(R.id.addr);
+        mInviteButton = (Button)findViewById(R.id.invite);
 
-        userid = getIntent().getStringExtra("userId");
+        geo = new Geocoder(getApplicationContext());
 
         mEventName = (EditText) findViewById(R.id.eventName);
 
@@ -125,50 +155,297 @@ public class EventActivity extends AppCompatActivity implements AdapterView.OnIt
         tag = dropdown.getSelectedItem().toString();
         mAddEventButton = (Button) findViewById(R.id.add_event);
 
-        mAddEventButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                event = new Event();
-                event.setName(mEventName.getText().toString());
-                //event.setTags(mTags.getText().toString());
 
-                //event.setDate();
-                List<String> userids = new ArrayList<String>();
-                List<String> invitees = new ArrayList<String>();
-                userids.add(userid);
-                event.setOrganiserId(userid);
-                event.setUsers(userids);
-                event.setInvitees(invitees);
-                event.setDate(new Date(date.getTimeInMillis()));
-                event.setLocation(new GeoPoint(13.1067,80.0970));
-                //event.setTags();
 
-                db.collection("Events")
-                        .add(event)
-                        .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                            @Override
-                            public void onSuccess(DocumentReference documentReference) {
-                                Log.d("Activity1", "DocumentSnapshot added with ID: " + documentReference.getId());
-                                String eventid = documentReference.getId().toString();
-                                event.setEventId(eventid);
-                                db.collection("Events").document(eventid).set(event);
-                                Intent second = new Intent(getApplicationContext(),SearchEvent.class);
-                                second.putExtra("userId",userid);
-                                startActivityForResult(second,0);
+        autocomplete = (MultiAutoCompleteTextView)findViewById(R.id.userInvite);
+        db.collection("usersnew")
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            nameIdMap = new HashMap<String, String>();
+                            idNameMap = new HashMap<String, String>();
+                            ArrayList<String> names = new ArrayList<>();
+                            for (QueryDocumentSnapshot document : task.getResult()) {
+                                Log.d("", document.getId() + " => " + document.getData());
+                                nameIdMap.put(document.get("name").toString(), document.getId());
+                                idNameMap.put(document.getId(), document.get("name").toString());
+                                names.add(document.get("name").toString());
                             }
-                        })
-                        .addOnFailureListener(new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                Log.d("Activity1", "Error adding document", e);
+
+
+                            final ArrayAdapter<String> adapter = new ArrayAdapter<String>
+                                    (EventActivity.this,android.R.layout.select_dialog_item, names);
+
+                            autocomplete.setAdapter(adapter);
+                            autocomplete.setTokenizer(new MultiAutoCompleteTextView.CommaTokenizer());
+
+                            if(eventid != null){
+                                db.collection("Events").document(eventid).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                    @Override
+                                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                                        if (task.isSuccessful()) {
+                                            DocumentSnapshot document = task.getResult();
+                                            if (document.exists()) {
+                                                eventMap = document.getData();
+                                                //sname.setText(event.get("eventName").to);
+                                                if(eventMap.get("name") != null)
+                                                    mEventName.setText(eventMap.get("name").toString());
+                                                if(eventMap.get("address") != null)
+                                                    address.setText(eventMap.get("address").toString());
+                                                if(eventMap.get("date") != null){
+                                                    Date existingDate = (Date)eventMap.get("date");
+                                                    Calendar calender = Calendar.getInstance();
+                                                    calender.setTime(existingDate);
+                                                    startDate.setText(new StringBuilder().append(calender.get(Calendar.DAY_OF_MONTH)).append("/")
+                                                            .append(calender.get(Calendar.MONTH)).append("/").append(calender.get(Calendar.YEAR)));
+                                                    time.setText("" + calender.get(Calendar.HOUR) +":" + calender.get(Calendar.MINUTE));
+                                                }
+                                                if(eventMap.get("users") != null){
+                                                    List<String> invites = (List<String>) eventMap.get("invitees");
+                                                    StringBuilder invts = new StringBuilder();
+                                                    for(String user : invites){
+                                                        if(!user.equals(userid))
+                                                            invts.append(idNameMap.get(user)+ ", ");
+                                                    }
+                                                    autocomplete.setText(invts.toString());
+                                                }
+                                                String [] dates = startDate.getText().toString().split("/");
+                                                date.set(Calendar.DAY_OF_MONTH, Integer.valueOf(dates[0]));
+                                                date.set(Calendar.MONTH, Integer.valueOf(dates[1]));
+                                                date.set(Calendar.YEAR, Integer.valueOf(dates[2]));
+                                                String [] times = time.getText().toString().split(":");
+                                                date.set(Calendar.MINUTE, Integer.valueOf(times[0]));
+                                                date.set(Calendar.HOUR, Integer.valueOf(times[1]));
+                                                mAddEventButton.setText("Update");
+                                                mAddEventButton.setOnClickListener(new View.OnClickListener() {
+                                                    @Override
+                                                    public void onClick(View view) {
+
+                                                        userid = getIntent().getStringExtra("userId");
+                                                        //final String eventid =
+                                                        db.collection("Events").document(eventid).update("name", mEventName.getText().toString(), "address",address.getText().toString(),"date", new Date(date.getTimeInMillis())).addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                            @Override
+                                                            public void onSuccess(Void aVoid) {
+                                                                Log.d("Acitivity1", "DocumentSnapshot successfully updated!");
+//                                                                Intent profile = new Intent(getApplicationContext(), Profile.class);
+//                                                                profile.putExtra("userId", userid);
+//                                                                EventActivity.this.startActivity(profile);
+
+                                                                CollectionReference eventsRef = db.collection("Events");
+                                                                //final List<Event> events = new ArrayList<Event>();
+                                                                Query query = eventsRef.whereArrayContains("users", userid);
+                                                                events = new ArrayList<>();
+                                                                query.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                                                                    @Override
+                                                                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                                                                        if (task.isSuccessful()) {
+                                                                            for (QueryDocumentSnapshot document : task.getResult()) {
+                                                                                Log.d("Activity1", document.getId() + " => " + document.getData());
+                                                                                Map<String, Object> docs = document.getData();
+                                                                                //Event event = (Event) doc.get(document.getId());
+                                                                                //if(docs.get("location") != null){
+                                                                                //GeoPoint gp = (GeoPoint) docs.get("location");
+                                                                                //Double dist = distanceTo(coordinates.latitude,gp.getLatitude(),coordinates.longitude, gp.getLongitude());
+                                                                                //Log.d("Activity1", dist.toString());
+                                                                                //if( (rangeinKm != null && coordinates != null && dist <= rangeinKm) || (rangeinKm == null || coordinates == null)){
+                                                                                //Log.d("Activity1", (String)docs.get("tags"));
+                                                                                Event event = new Event();
+                                                                                if(docs.get("tags") != null)
+                                                                                    event.setTags((String)docs.get("tags"));
+                                                                                if(docs.get("name") != null)
+                                                                                    event.setName((String)docs.get("name"));
+                                                                                if(docs.get("eventId") != null)
+                                                                                    event.setEventId((String)docs.get("eventId"));
+                                                                                if(docs.get("organiserId") != null)
+                                                                                    event.setOrganiserId((String)docs.get("organiserId"));
+
+                                                                                if((docs.get("location") != null)){
+                                                                                    GeoPoint gp1 = (GeoPoint)docs.get("location");
+                                                                                    event.setLat(gp1.getLatitude());
+                                                                                    event.setLng(gp1.getLongitude());
+                                                                                }
+
+                                                                                events.add(event);
+
+                                                                                // }
+
+                                                                                //}
+
+
+
+                                                                                //events.add(event);
+                                                                            }
+                                                                            Intent intent = new Intent(getApplicationContext(), MapScreen.class);
+                                                                            //Serializable eventList = (Serializable)events;
+                                                                            Bundle bundle = new Bundle();
+                                                                            bundle.putSerializable("eventlist", (Serializable) events);
+                                                                            intent.putExtras(bundle);
+                                                                            startActivity(intent);
+
+
+                                                                        } else {
+                                                                            Log.d("Activity1", "Error getting documents: ", task.getException());
+                                                                        }
+                                                                    }
+                                                                });
+                                                            }
+                                                        })
+                                                                .addOnFailureListener(new OnFailureListener() {
+                                                                    @Override
+                                                                    public void onFailure(@NonNull Exception e) {
+                                                                        Log.w("", "Error updating document", e);
+                                                                    }
+                                                                });
+
+                                                    }
+                                                });
+
+                                                Log.d("", "DocumentSnapshot data: " + document.getData());
+                                            } else {
+                                                Log.d("", "No such document");
+                                            }
+                                        } else {
+                                            Log.d("", "get failed with ", task.getException());
+                                        }
+                                    }
+                                });
                             }
-                        });
+                            else{
+                                mAddEventButton.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View view) {
+                                        event = new Event();
+                                        event.setName(mEventName.getText().toString());
+                                        //event.setTags(mTags.getText().toString());
+                                        String adr = address.getText().toString();
+                                        try {
+                                            addressList = geo.getFromLocationName(adr,3);
+                                        } catch (IOException e) {
+                                            e.printStackTrace();
+                                        }
+                                        e1 = addressList.get(0);
+                                        final LatLng e2 = new LatLng(e1.getLatitude(),e1.getLongitude());
+                                        //event.setDate();
+                                        List<String> userids = new ArrayList<String>();
+                                        List<String> invitees = new ArrayList<String>();
+                                        String [] names = autocomplete.getText().toString().split(", ");
+                                        //String[] id = new String[nameIdMap.size()];
+
+                                        for(String name : names){
+                                            String id = nameIdMap.get(name);
+                                            if(id != null)
+                                                invitees.add(id);
+                                        }
+                                        userids.add(userid);
+                                        event.setOrganiserId(userid);
+                                        event.setUsers(userids);
+                                        event.setInvitees(invitees);
+                                        event.setDate(new Date(date.getTimeInMillis()));
+                                        //event.setLocation(new GeoPoint(13.1067,80.0970));
+                                        event.setAddress(address.getText().toString());
+                                        event.setLocation(new GeoPoint(e2.latitude, e2.longitude));
+
+                                        //event.setTags();
+
+                                        db.collection("Events")
+                                                .add(event)
+                                                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                                                    @Override
+                                                    public void onSuccess(DocumentReference documentReference) {
+                                                        Log.d("Activity1", "DocumentSnapshot added with ID: " + documentReference.getId());
+                                                        String eventid = documentReference.getId().toString();
+                                                        event.setEventId(eventid);
+                                                        db.collection("Events").document(eventid).set(event).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                            @Override
+                                                            public void onComplete(@NonNull Task<Void> task) {
+//                                                                Intent second = new Intent(getApplicationContext(),Profile.class);
+//                                                                second.putExtra("userId",userid);
+//                                                                startActivityForResult(second,0);
+                                                                CollectionReference eventsRef = db.collection("Events");
+                                                                //final List<Event> events = new ArrayList<Event>();
+                                                                Query query = eventsRef.whereArrayContains("users", userid);
+                                                                events = new ArrayList<>();
+                                                                query.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                                                                    @Override
+                                                                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                                                                        if (task.isSuccessful()) {
+                                                                            for (QueryDocumentSnapshot document : task.getResult()) {
+                                                                                Log.d("Activity1", document.getId() + " => " + document.getData());
+                                                                                Map<String, Object> docs = document.getData();
+                                                                                //Event event = (Event) doc.get(document.getId());
+                                                                                //if(docs.get("location") != null){
+                                                                                //GeoPoint gp = (GeoPoint) docs.get("location");
+                                                                                //Double dist = distanceTo(coordinates.latitude,gp.getLatitude(),coordinates.longitude, gp.getLongitude());
+                                                                                //Log.d("Activity1", dist.toString());
+                                                                                //if( (rangeinKm != null && coordinates != null && dist <= rangeinKm) || (rangeinKm == null || coordinates == null)){
+                                                                                //Log.d("Activity1", (String)docs.get("tags"));
+                                                                                Event event = new Event();
+                                                                                if(docs.get("tags") != null)
+                                                                                    event.setTags((String)docs.get("tags"));
+                                                                                if(docs.get("name") != null)
+                                                                                    event.setName((String)docs.get("name"));
+                                                                                if(docs.get("eventId") != null)
+                                                                                    event.setEventId((String)docs.get("eventId"));
+                                                                                if(docs.get("organiserId") != null)
+                                                                                    event.setOrganiserId((String)docs.get("organiserId"));
+
+                                                                                if((docs.get("location") != null)){
+                                                                                    GeoPoint gp1 = (GeoPoint)docs.get("location");
+                                                                                    event.setLat(gp1.getLatitude());
+                                                                                    event.setLng(gp1.getLongitude());
+                                                                                }
+                                                                                events.add(event);
+
+                                                                                // }
+
+                                                                                //}
 
 
 
-            }
+                                                                                //events.add(event);
+                                                                            }
+                                                                            Intent intent = new Intent(getApplicationContext(), MapScreen.class);
+                                                                            //Serializable eventList = (Serializable)events;
+                                                                            Bundle bundle = new Bundle();
+                                                                            bundle.putSerializable("eventlist", (Serializable) events);
+                                                                            intent.putExtras(bundle);
+                                                                            startActivity(intent);
 
-        });
+
+                                                                        } else {
+                                                                            Log.d("Activity1", "Error getting documents: ", task.getException());
+                                                                        }
+                                                                    }
+                                                                });
+                                                            }
+                                                        });
+
+                                                    }
+                                                })
+                                                .addOnFailureListener(new OnFailureListener() {
+                                                    @Override
+                                                    public void onFailure(@NonNull Exception e) {
+                                                        Log.d("Activity1", "Error adding document", e);
+                                                    }
+                                                });
+
+
+
+                                    }
+
+                                });
+                            }
+
+                        } else {
+                            Log.d("", "Error getting documents: ", task.getException());
+                        }
+                    }
+                });
+
+
+
 
 
 

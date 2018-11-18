@@ -26,6 +26,9 @@ public class InviteAdaptor extends RecyclerView.Adapter<InviteAdaptor.EventViewh
     private String userid;
 
     FirebaseFirestore db = FirebaseFirestore.getInstance();
+   // Session session = new Session(getApplicationContext());
+
+
 
     public static class EventViewholder extends RecyclerView.ViewHolder{
         public Button acceptButton;
@@ -58,6 +61,7 @@ public class InviteAdaptor extends RecyclerView.Adapter<InviteAdaptor.EventViewh
     public void onBindViewHolder(@NonNull EventViewholder holder, int position) {
         Log.d("Activity1", " "+ position);
         final Event eve = listitem.get(position);
+        userid = LoginActivity.session.getuserId();
         holder.ename.setText(eve.getName());
         holder.acceptButton.setOnClickListener(new View.OnClickListener() {
             @Override

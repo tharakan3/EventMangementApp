@@ -11,7 +11,7 @@
         android:layout_width="wrap_content"
         android:layout_height="42dp"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="64dp"
+        android:layout_marginTop="60dp"
         android:layout_marginEnd="16dp"
         android:text="reject"
         app:layout_constraintEnd_toEndOf="parent"
@@ -21,7 +21,7 @@
 
     <TextView
         android:id="@+id/eventName_invite"
-        android:layout_width="120dp"
+        android:layout_width="342dp"
         android:layout_height="38dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
@@ -37,12 +37,24 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="116dp"
+        android:layout_marginTop="56dp"
         android:layout_marginEnd="16dp"
         android:text="Accept"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.029"
+        app:layout_constraintHorizontal_bias="0.419"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <View
+        android:id="@+id/divider"
+        android:layout_width="395dp"
+        android:layout_height="11dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:background="?android:attr/listDivider"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="parent" />
 
 </android.support.constraint.ConstraintLayout>
