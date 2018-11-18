@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -34,16 +35,19 @@ public class UpdateEvent extends AppCompatActivity {
     private String userid;
     FirebaseFirestore db = FirebaseFirestore.getInstance();
     private EditText sname;
-    private EditText stag;
+    private Spinner stag;
     private Button update;
+    private Map<String, Object> event;
+    private String name, datestr, address, time ;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_update_event);
-        sname = (EditText)findViewById(R.id.sname_update);
-        stag = (EditText)findViewById(R.id.stags_update);
-        update = (Button)findViewById(R.id.update_button);
+        sname = (EditText)findViewById(R.id.eventName_update);
+        stag = (Spinner)findViewById(R.id.tagList_update);
+        update = (Button)findViewById(R.id.update_event);
+
         final String eventid = getIntent().getStringExtra("eventId");
         db.collection("Events").document(eventid).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
@@ -51,7 +55,7 @@ public class UpdateEvent extends AppCompatActivity {
                 if (task.isSuccessful()) {
                     DocumentSnapshot document = task.getResult();
                     if (document.exists()) {
-                        Map event = document.getData();
+                         event = document.getData();
                         //sname.setText(event.get("eventName").to);
                         Log.d("", "DocumentSnapshot data: " + document.getData());
                     } else {
@@ -63,36 +67,38 @@ public class UpdateEvent extends AppCompatActivity {
             }
         });
 
-        update.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
 
-                userid = getIntent().getStringExtra("userId");
-                //final String eventid =
-                db.collection("Events").document(eventid).update("name", sname.getText().toString(), "tags",stag.getText().toString()).addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        Log.d("Acitivity1", "DocumentSnapshot successfully updated!");
-                        Intent profile = new Intent(getApplicationContext(), Profile.class);
-                        profile.putExtra("userId", userid);
-                        UpdateEvent.this.startActivity(profile);
-                    }
-                })
-                        .addOnFailureListener(new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                Log.w("", "Error updating document", e);
-                            }
-                        });
-                /*Intent second = new Intent(getApplicationContext(),EventListActivity.class);
-                second.putExtra("userId",userid);
-                second.putExtra("tags",stag.getText().toString());
-                second.putExtra("name",sname.getText().toString());
-                //second.putExtra("date", new Date());
-                //second.putExtra("tags", "f,s,s,s");
-                startActivityForResult(second,0);*/
-            }
-        });
+
+//        update.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//
+//                userid = getIntent().getStringExtra("userId");
+//                //final String eventid =
+//                db.collection("Events").document(eventid).update("name", sname.getText().toString(), "tags",stag.getText().toString()).addOnSuccessListener(new OnSuccessListener<Void>() {
+//                    @Override
+//                    public void onSuccess(Void aVoid) {
+//                        Log.d("Acitivity1", "DocumentSnapshot successfully updated!");
+//                        Intent profile = new Intent(getApplicationContext(), Profile.class);
+//                        profile.putExtra("userId", userid);
+//                        UpdateEvent.this.startActivity(profile);
+//                    }
+//                })
+//                        .addOnFailureListener(new OnFailureListener() {
+//                            @Override
+//                            public void onFailure(@NonNull Exception e) {
+//                                Log.w("", "Error updating document", e);
+//                            }
+//                        });
+//                /*Intent second = new Intent(getApplicationContext(),EventListActivity.class);
+//                second.putExtra("userId",userid);
+//                second.putExtra("tags",stag.getText().toString());
+//                second.putExtra("name",sname.getText().toString());
+//                //second.putExtra("date", new Date());
+//                //second.putExtra("tags", "f,s,s,s");
+//                startActivityForResult(second,0);*/
+//            }
+//        });
     }
 
     public List<Event> getEvents(Date date, String tags, String name) {

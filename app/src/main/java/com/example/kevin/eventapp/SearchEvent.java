@@ -22,6 +22,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.TimePicker;
 
@@ -65,7 +66,11 @@ public class SearchEvent extends AppCompatActivity {
     private static final double MAX_LON = Math.toRadians(180d);  //  PI
     public LatLng l2;
     public LatLng coordinates;
+    private SeekBar sek;
+    private TextView sektxt;
     Date datefield ;
+    Double rangeinKm = 15d;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -103,6 +108,31 @@ public class SearchEvent extends AppCompatActivity {
 //        } catch (ParseException e) {
 //            e.printStackTrace();
 //        }
+        sek = (SeekBar)findViewById(R.id.seekBar2);
+        sektxt = (TextView)findViewById(R.id.slidertext);
+        sek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            int progress;
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                progress = i;
+                String text = String.valueOf(i) + " Miles";
+                sektxt.setText(text);
+                rangeinKm = (double)i;
+
+
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+
 
         l3 = (LocationManager)this.getSystemService(Context.LOCATION_SERVICE);
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -127,7 +157,7 @@ public class SearchEvent extends AppCompatActivity {
 
                 coordinates = l2;
                // coordinates = new LatLng(13.1143, 80.1481);
-                final Double rangeinKm = 15d;
+                rangeinKm = 15d;
                 search.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {

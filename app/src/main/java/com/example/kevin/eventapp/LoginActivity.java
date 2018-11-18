@@ -200,5 +200,11 @@ public class LoginActivity extends AppCompatActivity {
 
 
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d("Activity1", "onResume: Login Activity Resumed");
+    }
 }
 

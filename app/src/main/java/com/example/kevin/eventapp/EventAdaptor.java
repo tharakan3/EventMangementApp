@@ -59,7 +59,7 @@ public class EventAdaptor extends RecyclerView.Adapter<EventAdaptor.EventViewhol
             @Override
             public void onClick(View view) {
                 LoginActivity.session.setEventId(eve.getEventId());
-                Intent intent = new Intent(cont, UpdateEvent.class);
+                Intent intent = new Intent(cont, EventActivity.class);
                 intent.putExtra("eventId", eve.getEventId());
                 intent.putExtra("userId", eve.getOrganiserId());
                 cont.startActivity(intent);
