@@ -157,6 +157,8 @@ public class MapScreen extends FragmentActivity {
     @Override
     public void onBackPressed() {
         Log.d("CDA", "onBackPressed Called");
+        Intent intent = new Intent(getApplicationContext(), InviteNotificationService.class);
+        stopService(intent);
         Intent setIntent = new Intent(getApplicationContext(),LoginActivity.class);
 
         startActivity(setIntent);
