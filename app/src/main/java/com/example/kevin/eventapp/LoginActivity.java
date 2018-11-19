@@ -3,6 +3,8 @@ package com.example.kevin.eventapp;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
@@ -43,6 +45,7 @@ import com.google.firebase.firestore.QuerySnapshot;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -61,6 +64,7 @@ public class LoginActivity extends AppCompatActivity {
     private Button mRegisterButton;
     public static Session session;
     private List<Event> events;
+
     Intent int1;
     FirebaseFirestore db = FirebaseFirestore.getInstance();
     @Override
@@ -69,6 +73,7 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
         // Set up the login form.
         session = new Session(getApplicationContext());
+        createNotificationChannel();
         mPasswordView = (EditText) findViewById(R.id.passwordLogin);
         mUserNameView = (EditText) findViewById(R.id.usernameLogin);
 
@@ -99,6 +104,8 @@ public class LoginActivity extends AppCompatActivity {
                                 String password = (String)docs.get("password");
                                 if(password.equals(mPasswordView.getText().toString()))
                                 {
+                                    Intent intent = new Intent(getApplicationContext(), InviteNotificationService.class);
+                                    startService(intent);
 
                                     session.setuserId(document.getId());
 
@@ -205,6 +212,23 @@ public class LoginActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         Log.d("Activity1", "onResume: Login Activity Resumed");
+    }
+
+
+    private void createNotificationChannel() {
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is new and not in the support library
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = "Invitee Notificaton";
+            String description = "Channel to Show to Invitee Notification";
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel("2", name, importance);
+            channel.setDescription(description);
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
     }
 }
 

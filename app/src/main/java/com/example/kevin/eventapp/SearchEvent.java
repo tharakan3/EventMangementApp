@@ -118,8 +118,6 @@ public class SearchEvent extends AppCompatActivity {
                 String text = String.valueOf(i) + " Miles";
                 sektxt.setText(text);
                 rangeinKm = (double)i;
-
-
             }
 
             @Override
@@ -157,7 +155,7 @@ public class SearchEvent extends AppCompatActivity {
 
                 coordinates = l2;
                // coordinates = new LatLng(13.1143, 80.1481);
-                rangeinKm = 15d;
+                //rangeinKm = 15d;
                 search.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
@@ -181,9 +179,9 @@ public class SearchEvent extends AppCompatActivity {
                             query = query.whereEqualTo("tags",tags);
                         }
 
-                        if(name != null && !"".equals(name)){
-                            query = query.whereEqualTo("name",sname.getText().toString());
-                        }
+//                        if(name != null && !"".equals(sname.getText().toString())){
+//                            query = query.whereEqualTo("name",sname.getText().toString());
+//                        }
 
                         if(datefield != null ){
                             query = query.whereGreaterThan("date",datefield);
@@ -209,7 +207,7 @@ public class SearchEvent extends AppCompatActivity {
                                             Double dist = distanceTo(coordinates.latitude,gp.getLatitude(),coordinates.longitude, gp.getLongitude());
 
                                             Log.d("Activity1", dist.toString());
-                                            if( (rangeinKm != null && coordinates != null && dist <= rangeinKm) || (rangeinKm == null || coordinates == null)){
+                                            if( (rangeinKm != null && coordinates != null && dist <= rangeinKm && name != null && !"".equals(sname.getText().toString()) && ((String)docs.get("name")).contains(name)) || (rangeinKm == null || coordinates == null || "".equals(sname.getText().toString())) ){
                                                 //Log.d("Activity1", (String)docs.get("tags"));
                                                 Event event = new Event();
                                                 if(docs.get("tags") != null)

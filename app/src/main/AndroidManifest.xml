@@ -40,6 +40,7 @@
         </activity>
         <activity android:name=".UpdateEvent" />
         <activity android:name=".EventInviteActivity"></activity>
+        <service android:name=".InviteNotificationService" />
 
         <!--
              The API key for Google Maps-based APIs is defined as a string resource.
