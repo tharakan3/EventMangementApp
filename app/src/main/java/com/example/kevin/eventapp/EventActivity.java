@@ -101,6 +101,8 @@ public class EventActivity extends AppCompatActivity implements AdapterView.OnIt
     private HashMap<String, String> idNameMap;
     private Map<String, Object> eventMap;
     private List<Event> events;
+    String[] tags;
+    Spinner dropdown;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -143,9 +145,9 @@ public class EventActivity extends AppCompatActivity implements AdapterView.OnIt
         });
 
         //get the spinner from the xml.
-        Spinner dropdown = findViewById(R.id.tagList);
+        dropdown = findViewById(R.id.tagList);
 //create a list of items for the spinner.
-        String[] tags = new String[]{"tag1", "tag2", "tag3"};
+        tags = new String[]{"Social", "Work", "Clubs", "Sport", "Music", "Festivals"};
 //create an adapter to describe how the items are displayed, adapters are used in several places in android.
 //There are multiple variations of this, but this is the basic variant.
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, tags);
@@ -211,6 +213,14 @@ public class EventActivity extends AppCompatActivity implements AdapterView.OnIt
                                                     }
                                                     autocomplete.setText(invts.toString());
                                                 }
+                                                if(eventMap.get("tags") != null){
+                                                    String tag = (String)eventMap.get("tags");
+                                                    for(int i = 0; i< tags.length; i++){
+                                                        if(tags[i].equals(tag)){
+                                                            dropdown.setSelection(i);
+                                                        }
+                                                    }
+                                                }
                                                 String [] dates = startDate.getText().toString().split("/");
                                                 date.set(Calendar.DAY_OF_MONTH, Integer.valueOf(dates[0]));
                                                 date.set(Calendar.MONTH, Integer.valueOf(dates[1]));
@@ -224,8 +234,27 @@ public class EventActivity extends AppCompatActivity implements AdapterView.OnIt
                                                     public void onClick(View view) {
 
                                                         userid = getIntent().getStringExtra("userId");
+
+                                                        String adr = address.getText().toString();
+                                                        try {
+                                                            addressList = geo.getFromLocationName(adr,3);
+                                                        } catch (IOException e) {
+                                                            e.printStackTrace();
+                                                        }
+                                                        e1 = addressList.get(0);
+                                                        final LatLng e2 = new LatLng(e1.getLatitude(),e1.getLongitude());
+                                                        //List<String> userids = new ArrayList<String>();
+                                                        List<String> invitees = new ArrayList<String>();
+                                                        String [] names = autocomplete.getText().toString().split(", ");
+                                                        //String[] id = new String[nameIdMap.size()];
+
+                                                        for(String name : names){
+                                                            String id = nameIdMap.get(name);
+                                                            if(id != null)
+                                                                invitees.add(id);
+                                                        }
                                                         //final String eventid =
-                                                        db.collection("Events").document(eventid).update("name", mEventName.getText().toString(), "address",address.getText().toString(),"date", new Date(date.getTimeInMillis())).addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                        db.collection("Events").document(eventid).update("name", mEventName.getText().toString(), "address",address.getText().toString(),"date", new Date(date.getTimeInMillis()),"location", new GeoPoint(e2.latitude, e2.longitude),"tags", dropdown.getSelectedItem().toString(),"invitees", FieldValue.arrayUnion(invitees.toArray())).addOnSuccessListener(new OnSuccessListener<Void>() {
                                                             @Override
                                                             public void onSuccess(Void aVoid) {
                                                                 Log.d("Acitivity1", "DocumentSnapshot successfully updated!");
@@ -346,6 +375,7 @@ public class EventActivity extends AppCompatActivity implements AdapterView.OnIt
                                         //event.setLocation(new GeoPoint(13.1067,80.0970));
                                         event.setAddress(address.getText().toString());
                                         event.setLocation(new GeoPoint(e2.latitude, e2.longitude));
+                                        event.setTags(dropdown.getSelectedItem().toString());
 
                                         //event.setTags();
 
