@@ -100,6 +100,21 @@ public class Map extends android.support.v4.app.Fragment implements OnMapReadyCa
             // for ActivityCompat#requestPermissions for more details.
             return;
         }
+
+        Location lx = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        if(lx!=null){
+            l2 = new LatLng(lx.getLatitude(),lx.getLongitude());
+
+        }
+
+        else
+        {
+            lx = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+            if(lx!=null){
+                l2 = new LatLng(lx.getLatitude(),lx.getLongitude());
+            }
+        }
+
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
@@ -182,7 +197,7 @@ public class Map extends android.support.v4.app.Fragment implements OnMapReadyCa
         //googleMap.addMarker(new MarkerOptions().position(new LatLng(40.689247,-74.044502))).setTitle("Bingo");
         int l =  size(MapScreen.events);
         if(MapScreen.events.size()>0) {
-            for(int i=0;i<MapScreen.events.size();i++) {
+            for (int i = 0; i < MapScreen.events.size(); i++) {
 
 
                 le = new LatLng(MapScreen.events.get(i).getLat(), MapScreen.events.get(i).getLng());
@@ -196,34 +211,6 @@ public class Map extends android.support.v4.app.Fragment implements OnMapReadyCa
             }
         }
 
-        try {
-            addressList = geo.getFromLocationName(Home[0], 3);
-            if (addressList != null) {
-                uevent = addressList.get(0);
-                le = new LatLng(uevent.getLatitude(), uevent.getLongitude());
-                eventMarker.position(le);
-                eventMarker.title("Party at Fisher");
-                eventMarker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
-                googleMap.addMarker(eventMarker);
-
-
-            }
-
-            addressList = geo.getFromLocationName(Home[1], 3);
-            if (addressList != null) {
-                uevent = addressList.get(0);
-                le = new LatLng(uevent.getLatitude(), uevent.getLongitude());
-                eventMarker.position(le);
-                eventMarker.title("Party at Caldwell");
-                eventMarker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
-                googleMap.addMarker(eventMarker);
-
-
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
         googleMap.setOnMarkerClickListener(this);
 
 
