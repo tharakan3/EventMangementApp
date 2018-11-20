@@ -146,6 +146,22 @@ public class SearchEvent extends AppCompatActivity {
             // for ActivityCompat#requestPermissions for more details.
             return;
         }
+
+
+        Location lx = l3.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        if(lx!=null){
+            l2 = new LatLng(lx.getLatitude(),lx.getLongitude());
+
+        }
+
+        else
+        {
+            lx = l3.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+            if(lx!=null){
+                l2 = new LatLng(lx.getLatitude(),lx.getLongitude());
+            }
+        }
+        coordinates = l2;
         l3.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, new LocationListener() {
 
             @Override
@@ -269,6 +285,103 @@ public class SearchEvent extends AppCompatActivity {
 
             @Override
             public void onProviderDisabled(String s) {
+
+            }
+        });
+
+        search.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String dateStr = sDate.getText().toString();
+                SimpleDateFormat sdf = new SimpleDateFormat("yyy/mm/dd");
+                datefield  = null;
+                try {
+                    if(dateStr != null && !"".equals(dateStr))
+                        datefield = sdf.parse(dateStr);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+
+                final String tags = stag.getText().toString();
+                final String name = sname.getText().toString();
+                CollectionReference eventsRef = db.collection("Events");
+                //final List<Event> events = new ArrayList<Event>();
+                Query query = eventsRef.whereArrayContains("users", userid);//.whereEqualTo("name", name);//.whereEqualTo("tags", tags);//.whereEqualTo("date", date);
+
+                if(tags != null && !"".equals(tags)){
+                    query = query.whereEqualTo("tags",tags);
+                }
+
+//                        if(name != null && !"".equals(sname.getText().toString())){
+//                            query = query.whereEqualTo("name",sname.getText().toString());
+//                        }
+
+                if(datefield != null ){
+                    query = query.whereGreaterThan("date",datefield);
+                }
+
+                        /*if(rangeinKm != null && coordinates != null){
+                            double [] range = getMinMaxLat(new LatLng(13.1143, 80.1481), rangeinKm);
+                            query.whereGreaterThan("location", new GeoPoint(range[0], range[1]));
+                            query.whereLessThan("location", new GeoPoint(range[2], range[3]));
+                        }*/
+                Log.d("Activity1", "reached getevents");
+                //Log.d("Activity1", dateStr);
+                query.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            for (QueryDocumentSnapshot document : task.getResult()) {
+                                Log.d("Activity1", document.getId() + " => " + document.getData());
+                                Map<String, Object> docs = document.getData();
+                                //Event event = (Event) doc.get(document.getId());
+                                //if(docs.get("location") != null){
+                                GeoPoint gp = (GeoPoint) docs.get("location");
+                                Double dist = distanceTo(coordinates.latitude,gp.getLatitude(),coordinates.longitude, gp.getLongitude());
+
+                                Log.d("Activity1", dist.toString());
+                                if( (rangeinKm != null && coordinates != null && dist <= rangeinKm && name != null && !"".equals(sname.getText().toString()) && ((String)docs.get("name")).contains(name)) || (rangeinKm == null || coordinates == null || "".equals(sname.getText().toString())) ){
+                                    //Log.d("Activity1", (String)docs.get("tags"));
+                                    Event event = new Event();
+                                    if(docs.get("tags") != null)
+                                        event.setTags((String)docs.get("tags"));
+                                    if(docs.get("name") != null)
+                                        event.setName((String)docs.get("name"));
+                                    if(docs.get("eventId") != null)
+                                        event.setEventId((String)docs.get("eventId"));
+                                    if(docs.get("organiserId") != null)
+                                        event.setOrganiserId((String)docs.get("organiserId"));
+
+                                    if((docs.get("location") != null)) {
+                                        GeoPoint gp1 = (GeoPoint) docs.get("location");
+                                        event.setLat(gp1.getLatitude());
+                                        event.setLng(gp1.getLongitude());
+                                    }
+                                    events.add(event);
+                                }
+
+
+                                // }
+
+                                //}
+
+
+
+                                //events.add(event);
+                            }
+                            Intent intent = new Intent(getApplicationContext(), MapScreen.class);
+                            //Serializable eventList = (Serializable)events;
+                            Bundle bundle = new Bundle();
+                            bundle.putSerializable("eventlist", (Serializable) events);
+                            intent.putExtras(bundle);
+                            startActivity(intent);
+
+
+                        } else {
+                            Log.d("Activity1", "Error getting documents: ", task.getException());
+                        }
+                    }
+                });
 
             }
         });
