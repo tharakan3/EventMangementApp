@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.TextView;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -31,6 +32,7 @@ public class MapScreen extends FragmentActivity {
     ImageButton refreshButton ;
     public static List<Event> events = new ArrayList<>();
     FirebaseFirestore db = FirebaseFirestore.getInstance();
+    TextView name;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +48,8 @@ public class MapScreen extends FragmentActivity {
 
         setContentView(R.layout.activity_map_screen);
         refreshButton = (ImageButton) findViewById(R.id.refresh1);
+        name = (TextView)findViewById(R.id.User);
+        name.setText(LoginActivity.session.getuserName());
         FragmentManager Fm  = getSupportFragmentManager();
         Fragment frag = Fm.findFragmentById(R.id.fc);
         if(frag==null){

@@ -30,4 +30,14 @@ public class Session {
         String eventId = prefs.getString("eventId","");
         return eventId;
     }
-}
+
+    public void setuserName(String username) {
+        prefs.edit().putString("username", username).commit();
+    }
+
+    public String getuserName() {
+        String usename = prefs.getString("username", "");
+        return usename;
+     };
+
+    }

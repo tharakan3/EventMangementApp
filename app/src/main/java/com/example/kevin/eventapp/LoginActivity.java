@@ -108,6 +108,12 @@ public class LoginActivity extends AppCompatActivity {
                                     startService(intent);
 
                                     session.setuserId(document.getId());
+                                    Map<String, Object> userdata = document.getData();
+
+                                    if(docs.get("name") != null) {
+                                        String username = (String) docs.get("name");
+                                        session.setuserName(username);
+                                    }
 
                                     CollectionReference eventsRef = db.collection("Events");
                                     //final List<Event> events = new ArrayList<Event>();
