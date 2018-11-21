@@ -192,6 +192,7 @@ public class Map extends android.support.v4.app.Fragment implements OnMapReadyCa
 
         }
         googleMap.setMyLocationEnabled(true);
+        googleMap.getUiSettings().setZoomControlsEnabled(true);
         x = 13.00;
         y = 80.00;
         //googleMap.addMarker(new MarkerOptions().position(new LatLng(40.689247,-74.044502))).setTitle("Bingo");

@@ -26,10 +26,11 @@
             android:name="org.apache.http.legacy"
             android:required="false" />
 
-        <activity android:name=".MainActivity" />
+        <activity android:name=".MainActivity"  android:label="Registration" />
         <activity android:name=".Profile" />
-        <activity android:name=".EventActivity" />
-        <activity android:name=".SearchEvent" />
+        <activity android:name=".Profile2" />
+        <activity android:name=".EventActivity" android:label="Create Event"/>
+        <activity android:name=".SearchEvent" android:label="Search Event" />
         <activity android:name=".EventListActivity" />
         <activity android:name=".LoginActivity">
             <intent-filter>
@@ -55,8 +56,8 @@
             android:value="@string/google_maps_key" />
 
         <activity
-            android:name=".MapScreen"
-            android:label="@string/title_activity_map_screen" />
+            android:name=".MapScreen"/>
+
         <activity
             android:name=".locationscreen"
             android:label="@string/title_activity_locationscreen"></activity>
