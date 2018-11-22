@@ -8,55 +8,59 @@
 
     <Button
         android:id="@+id/reject"
-        android:layout_width="wrap_content"
+        android:layout_width="136dp"
         android:layout_height="42dp"
-        android:layout_marginBottom="8dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="60dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="24dp"
+        android:background="@drawable/buttons"
         android:text="reject"
-        app:layout_constraintBottom_toTopOf="@+id/accept"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.029"
+        android:textColor="@android:color/background_light"
+        app:layout_constraintEnd_toStartOf="@+id/accept"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/eventName_invite" />
 
     <TextView
         android:id="@+id/eventName_invite"
-        android:layout_width="170dp"
+        android:layout_width="196dp"
         android:layout_height="38dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="16dp"
+        android:textColor="@color/common_google_signin_btn_text_dark_focused"
+        android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.032"
+        app:layout_constraintHorizontal_bias="0.04"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
 
     <Button
         android:id="@+id/accept"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="123dp"
+        android:layout_height="43dp"
         android:layout_marginEnd="16dp"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="116dp"
+        android:background="@drawable/buttons"
         android:text="Accept"
+        android:textColor="@color/common_google_signin_btn_text_dark_default"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.029"
+        app:layout_constraintHorizontal_bias="0.89"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/eventName_invite" />
 
     <View
         android:id="@+id/divider"
-        android:layout_width="395dp"
-        android:layout_height="11dp"
-        android:layout_marginStart="8dp"
+        android:layout_width="0dp"
+        android:layout_height="2dp"
         android:layout_marginEnd="8dp"
-        android:background="?android:attr/listDivider"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="108dp"
+        android:background="@android:color/background_dark"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        tools:background="@android:color/black" />
 
 </android.support.constraint.ConstraintLayout>
