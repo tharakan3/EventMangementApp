@@ -7,11 +7,13 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 
+import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.CollectionReference;
@@ -31,7 +33,7 @@ public class MapScreen extends FragmentActivity {
     ImageButton refreshButton ;
     public static List<Event> events = new ArrayList<>();
     FirebaseFirestore db = FirebaseFirestore.getInstance();
-
+    Fragment frag2,frag;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -47,10 +49,10 @@ public class MapScreen extends FragmentActivity {
         setContentView(R.layout.activity_map_screen);
         refreshButton = (ImageButton) findViewById(R.id.refresh1);
         FragmentManager Fm  = getSupportFragmentManager();
-        Fragment frag = Fm.findFragmentById(R.id.fc);
-        if(frag==null){
-            frag = new Map();
-            Fm.beginTransaction().add(R.id.fc,frag).commit();
+        frag2 = Fm.findFragmentById(R.id.fc);
+        if(frag2==null){
+            frag2 = new Map();
+            Fm.beginTransaction().add(R.id.fc,frag2, "f1").commit();
 
         }
         bcreate = (Button)findViewById(R.id.bcreate);
@@ -59,9 +61,46 @@ public class MapScreen extends FragmentActivity {
         bsearch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                ise = new Intent(getApplicationContext(),SearchEvent.class);
-                startActivity(ise);
+                /*ise = new Intent(getApplicationContext(),SearchEvent.class);
+                startActivity(ise);*/
 
+
+// Commit the transaction
+
+                FragmentManager Fm = getSupportFragmentManager();
+                Fragment frag = new SearchFragment();
+                FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+                //Fragment mapFragment = Fm.findFragmentById(R.id.fc);
+                /*if(mapFragment instanceof Map){
+                    transaction.hide(mapFragment);
+                    //transaction.commit();
+                }*/
+                // Replace whatever is in the fragment_container view with this fragment,
+                // and add the transaction to the back stack so the user can navigate back
+                // getSupportFragmentManager().beginTransaction().add(R.id.fc, frag).commit();
+                transaction.add(R.id.fc, frag, "f2");
+
+                //transaction.addToBackStack(null);
+
+               // transaction.commit();
+                Fragment mapf = Fm.findFragmentByTag("f1");
+               //Fm.beginTransaction().hide(mapf).commit();
+
+                transaction.hide(mapf);
+                transaction.commit();
+
+
+                List<Fragment> fragments = Fm.getFragments();
+                /*for(Fragment fragment : fragments) {
+                    if (fragment.g) {
+
+                        Fm.beginTransaction().remove(fragment).commit();
+                    }
+                    else{
+                       // Fm.beginTransaction().hide(fragment).commit();
+                    }
+
+                            }*/
             }
         });
 
@@ -82,10 +121,11 @@ public class MapScreen extends FragmentActivity {
             }
         });
 
+
         refreshButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                CollectionReference eventsRef = db.collection("Events");
+                /*CollectionReference eventsRef = db.collection("Events");
                 //final List<Event> events = new ArrayList<Event>();
                 Query query = eventsRef.whereArrayContains("users", LoginActivity.session.getuserId());
 
@@ -140,7 +180,22 @@ public class MapScreen extends FragmentActivity {
                             Log.d("Activity1", "Error getting documents: ", task.getException());
                         }
                     }
-                });
+                });*/
+
+                FragmentManager Fm  = getSupportFragmentManager();
+                //Fragment frag = new Map();
+
+
+                /*List<Fragment> fragments = Fm.getFragments();
+                for(Fragment fragment : fragments){
+                    if(fragment instanceof com.example.kevin.eventapp.Map ){
+                            ((Map) fragment).setMarkersAfterSearch();
+                    }
+                    else if(fragment instanceof SearchFragment){
+                        Fm.beginTransaction().remove(fragment).commit();
+                    }
+                }*/
+
 
             }
         });

@@ -249,6 +249,27 @@ public class Map extends android.support.v4.app.Fragment implements OnMapReadyCa
 
     }
 
+    public void setMarkersAfterSearch(){
+        mGoogleMap.clear();
+        int l =  size(MapScreen.events);
+        if(MapScreen.events.size()>0) {
+            for (int i = 0; i < MapScreen.events.size(); i++) {
+
+
+                le = new LatLng(MapScreen.events.get(i).getLat(), MapScreen.events.get(i).getLng());
+                eventMarker.position(le);
+                eventMarker.title(MapScreen.events.get(i).getName());
+                eventMarker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+                mGoogleMap.addMarker(eventMarker);
+
+                Liberty = CameraPosition.builder().target(le).zoom(15).build();
+                mGoogleMap.moveCamera(CameraUpdateFactory.newCameraPosition(Liberty));
+            }
+        }
+
+        mGoogleMap.setOnMarkerClickListener(this);
+    }
+
 
 
 

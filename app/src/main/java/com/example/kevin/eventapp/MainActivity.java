@@ -3,6 +3,7 @@ package com.example.kevin.eventapp;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
@@ -32,6 +33,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -49,6 +51,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.common.hash.Hashing;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -56,6 +59,12 @@ import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
+
+import static android.widget.Toast.LENGTH_LONG;
+import static com.example.kevin.eventapp.Constants.CONNECTIVITY_ERROR_MESSAGE;
+import static com.example.kevin.eventapp.Constants.EMPTY_FIELD_ERROR_MESSAGE;
+import static com.example.kevin.eventapp.Constants.INVALID_EMAIL_ERROR;
+import static com.example.kevin.eventapp.Constants.INVALID_PASSWORD_ERROR;
 
 
 /**
@@ -67,7 +76,8 @@ import com.google.firebase.firestore.QuerySnapshot;
          * Id to identity READ_CONTACTS permission request.
          */
         private static final int REQUEST_READ_CONTACTS = 0;
-        public Intent second;
+
+    public Intent second;
 
 
         /**
@@ -100,8 +110,6 @@ import com.google.firebase.firestore.QuerySnapshot;
         private View mLoginFormView;
         private EditText mUserName;
         private List<Event> events;
-        // Google Login.
-//    private FirebaseAuth mAuth;
 
         // Date of birth.
         private DatePicker datePicker;
@@ -109,7 +117,7 @@ import com.google.firebase.firestore.QuerySnapshot;
         private TextView date;
         private int year, month, day;
 
-
+        private Context context;
         private User mNewUser;
 
         @Override
@@ -120,7 +128,7 @@ import com.google.firebase.firestore.QuerySnapshot;
             // Set up the login form.
             mEmailView = (EditText) findViewById(R.id.email);
             //populateAutoComplete();
-
+            context = getApplicationContext();
             mPasswordView = (EditText) findViewById(R.id.password);
             mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
                 @Override
@@ -138,118 +146,97 @@ import com.google.firebase.firestore.QuerySnapshot;
                 @Override
                 public void onClick(View view) {
                     //attemptLogin();
-                    mNewUser = new User();
-                    mNewUser.setUserId("");
-                    mNewUser.setEmail(mEmailView.getText().toString());
-                    mNewUser.setName(mUserName.getText().toString());
-                    mNewUser.setPassword(mPasswordView.getText().toString());
-                    //mNewUser.set
-                    Log.d("Activity1", "User Object created");
-                    //db.collection("test").document("newTest").set(mNewUser);
-                    Map<String, Object> data = new HashMap<>();
-                    data.put("name", "Tokyo");
-                    data.put("country", "Japan");
+                    boolean isNetworkCnted = Utils.isNetworkConnected(context);
+                    boolean isValidField = validateFields();
+                    if(isNetworkCnted && isValidField){
+                        mNewUser = new User();
+                        mNewUser.setUserId("");
+                        mNewUser.setEmail(mEmailView.getText().toString());
+                        mNewUser.setName(mUserName.getText().toString());
 
-                    db.collection("usersnew")
-                            .add(mNewUser)
-                            .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                                @Override
-                                public void onSuccess(DocumentReference documentReference) {
-                                    String  userid = documentReference.getId().toString();
-                                    Log.d("Activity1", "DocumentSnapshot added with ID: " + documentReference.getId());
-                                    mNewUser.setUserId(userid);
-                                    events = new ArrayList<>();
-                                    db.collection("usersnew").document(userid).set(mNewUser);
+                        //hash the password
+                        String sha256hex = Hashing.sha256()
+                                .hashString(mPasswordView.getText().toString(), StandardCharsets.UTF_8)
+                                .toString();
+                        mNewUser.setPassword(sha256hex);
+                        Log.d("Activity1", "User Object created");
+                        db.collection("usersnew")
+                                .add(mNewUser)
+                                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                                    @Override
+                                    public void onSuccess(DocumentReference documentReference) {
+                                        String  userid = documentReference.getId().toString();
+                                        Log.d("Activity1", "DocumentSnapshot added with ID: " + documentReference.getId());
+                                        mNewUser.setUserId(userid);
+                                        events = new ArrayList<>();
+                                        db.collection("usersnew").document(userid).set(mNewUser);
 
 
-                                    LoginActivity.session.setuserId(userid);
+                                        LoginActivity.session.setuserId(userid);
 
-                                    CollectionReference eventsRef = db.collection("Events");
-                                    //final List<Event> events = new ArrayList<Event>();
-                                    Query query = eventsRef.whereArrayContains("users", userid);
+                                        CollectionReference eventsRef = db.collection("Events");
+                                        //final List<Event> events = new ArrayList<Event>();
+                                        Query query = eventsRef.whereArrayContains("users", userid);
 
-                                    query.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                                        @Override
-                                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                                            if (task.isSuccessful()) {
-                                                for (QueryDocumentSnapshot document : task.getResult()) {
-                                                    Log.d("Activity1", document.getId() + " => " + document.getData());
-                                                    Map<String, Object> docs = document.getData();
-                                                    //Event event = (Event) doc.get(document.getId());
-                                                    //if(docs.get("location") != null){
-                                                    //GeoPoint gp = (GeoPoint) docs.get("location");
-                                                    //Double dist = distanceTo(coordinates.latitude,gp.getLatitude(),coordinates.longitude, gp.getLongitude());
-                                                    //Log.d("Activity1", dist.toString());
-                                                    //if( (rangeinKm != null && coordinates != null && dist <= rangeinKm) || (rangeinKm == null || coordinates == null)){
-                                                    //Log.d("Activity1", (String)docs.get("tags"));
-                                                    Event event = new Event();
-                                                    if(docs.get("tags") != null)
-                                                        event.setTags((String)docs.get("tags"));
-                                                    if(docs.get("name") != null)
-                                                        event.setName((String)docs.get("name"));
-                                                    if(docs.get("eventId") != null)
-                                                        event.setEventId((String)docs.get("eventId"));
-                                                    if(docs.get("organiserId") != null)
-                                                        event.setOrganiserId((String)docs.get("organiserId"));
+                                        query.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                                            @Override
+                                            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                                                if (task.isSuccessful()) {
+                                                    for (QueryDocumentSnapshot document : task.getResult()) {
+                                                        Log.d("Activity1", document.getId() + " => " + document.getData());
+                                                        Map<String, Object> docs = document.getData();
 
-                                                    if((docs.get("location") != null)){
-                                                        GeoPoint gp1 = (GeoPoint)docs.get("location");
-                                                        event.setLat(gp1.getLatitude());
-                                                        event.setLng(gp1.getLongitude());
+                                                        Event event = new Event();
+                                                        if(docs.get("tags") != null)
+                                                            event.setTags((String)docs.get("tags"));
+                                                        if(docs.get("name") != null)
+                                                            event.setName((String)docs.get("name"));
+                                                        if(docs.get("eventId") != null)
+                                                            event.setEventId((String)docs.get("eventId"));
+                                                        if(docs.get("organiserId") != null)
+                                                            event.setOrganiserId((String)docs.get("organiserId"));
+
+                                                        if((docs.get("location") != null)){
+                                                            GeoPoint gp1 = (GeoPoint)docs.get("location");
+                                                            event.setLat(gp1.getLatitude());
+                                                            event.setLng(gp1.getLongitude());
+                                                        }
+                                                        events.add(event);
+
                                                     }
-                                                    events.add(event);
+                                                    Intent intent = new Intent(getApplicationContext(), MapScreen.class);
+                                                    //Serializable eventList = (Serializable)events;
+                                                    Bundle bundle = new Bundle();
+                                                    bundle.putSerializable("eventlist", (Serializable) events);
+                                                    intent.putExtras(bundle);
+                                                    startActivity(intent);
 
-                                                    // }
 
-                                                    //}
-
-
-
-                                                    //events.add(event);
+                                                } else {
+                                                    Log.d("Activity1", "Error getting documents: ", task.getException());
                                                 }
-                                                Intent intent = new Intent(getApplicationContext(), MapScreen.class);
-                                                //Serializable eventList = (Serializable)events;
-                                                Bundle bundle = new Bundle();
-                                                bundle.putSerializable("eventlist", (Serializable) events);
-                                                intent.putExtras(bundle);
-                                                startActivity(intent);
-
-
-                                            } else {
-                                                Log.d("Activity1", "Error getting documents: ", task.getException());
                                             }
-                                        }
-                                    });
-//                                    second = new Intent(getApplicationContext(),Profile.class);
-//                                    second.putExtra("username",mUserName.getText().toString());
-//                                    second.putExtra("userid",userid);
-//                                    startActivityForResult(second,0);
-                                }
-                            })
-                            .addOnFailureListener(new OnFailureListener() {
-                                @Override
-                                public void onFailure(@NonNull Exception e) {
-                                    Log.d("Activity1", "Error adding document", e);
-                                }
-                            });
+                                        });
 
-
-                    Log.d("Activity1", "Done");
-/*
-                    db.collection("users")
-                            .get()
-                            .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                                @Override
-                                public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                                    if (task.isSuccessful()) {
-                                        for (QueryDocumentSnapshot document : task.getResult()) {
-                                            Log.d("Activity1", document.getId() + " => " + document.getData());
-                                        }
-                                    } else {
-                                        Log.w("Activity1", "Error getting documents.", task.getException());
                                     }
-                                }
-                            });*/
+                                })
+                                .addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        Log.d("Activity1", "Error adding document", e);
+                                    }
+                                });
+
+
+                        Log.d("Activity1", "Done");
+
+                    }
+                    else if(!isNetworkCnted){
+                        Toast.makeText(context, CONNECTIVITY_ERROR_MESSAGE, LENGTH_LONG).show();
+                    }
+
+
+
 
 
 
@@ -260,10 +247,25 @@ import com.google.firebase.firestore.QuerySnapshot;
             calendar = Calendar.getInstance();
             year = calendar.get(Calendar.YEAR);
 
-      /*  mLoginFormView = findViewById(R.id.login_form);
-        mProgressView = findViewById(R.id.login_progress);*/
         }
 
+    public boolean validateFields(){
+
+        if(Utils.isStringNullorEmpty(mUserName.getText().toString()) || Utils.isStringNullorEmpty(mPasswordView.getText().toString())
+         || Utils.isStringNullorEmpty(mEmailView.getText().toString()) || Utils.isStringNullorEmpty(date.getText().toString())  ){
+            Toast.makeText(getApplicationContext(),EMPTY_FIELD_ERROR_MESSAGE, Toast.LENGTH_SHORT ).show();
+            return false;
+        }
+        else if(!Utils.validateEmail(mEmailView.getText().toString())){
+            Toast.makeText(getApplicationContext(),INVALID_EMAIL_ERROR, Toast.LENGTH_SHORT ).show();
+            return false;
+        }
+        else if(!Utils.validatePassword(mPasswordView.getText().toString())){
+            Toast.makeText(getApplicationContext(),INVALID_PASSWORD_ERROR, Toast.LENGTH_SHORT ).show();
+            return false;
+        }
+        return true;
+    }
         @Override
         public void onStart() {
             super.onStart();
