@@ -204,7 +204,38 @@ public class Map extends android.support.v4.app.Fragment implements OnMapReadyCa
                 le = new LatLng(MapScreen.events.get(i).getLat(), MapScreen.events.get(i).getLng());
                 eventMarker.position(le);
                 eventMarker.title(MapScreen.events.get(i).getName());
-                eventMarker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+                if(MapScreen.events.get(i).getTags()!=null) {
+                    switch (MapScreen.events.get(i).getTags()) {
+                        case "Social":
+                            eventMarker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+                            break;
+
+                        case "Work":
+                            eventMarker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
+                            break;
+
+                        case "Clubs":
+                            eventMarker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
+                            break;
+
+                        case "Sport":
+                            eventMarker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN));
+
+                        case "Music":
+                            eventMarker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE));
+
+                        case "Festivals":
+                            eventMarker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET));
+
+                        default:
+                            eventMarker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
+
+
+                    }
+                }
+                else {
+                    eventMarker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
+                }
                 googleMap.addMarker(eventMarker);
 
                 Liberty = CameraPosition.builder().target(le).zoom(15).build();
@@ -260,7 +291,40 @@ public class Map extends android.support.v4.app.Fragment implements OnMapReadyCa
                 le = new LatLng(MapScreen.events.get(i).getLat(), MapScreen.events.get(i).getLng());
                 eventMarker.position(le);
                 eventMarker.title(MapScreen.events.get(i).getName());
-                eventMarker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+
+                if(MapScreen.events.get(i).getTags()!=null) {
+                    switch (MapScreen.events.get(i).getTags()) {
+                        case "Social":
+                            eventMarker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+                            break;
+
+                        case "Work":
+                            eventMarker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
+                            break;
+
+                        case "Clubs":
+                            eventMarker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
+                            break;
+
+                        case "Sport":
+                            eventMarker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN));
+
+                        case "Music":
+                            eventMarker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE));
+
+                        case "Festivals":
+                            eventMarker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET));
+
+                        default:
+                            eventMarker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
+
+
+                    }
+                }
+                else {
+                    eventMarker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
+                }
+
                 mGoogleMap.addMarker(eventMarker);
 
                 Liberty = CameraPosition.builder().target(le).zoom(15).build();

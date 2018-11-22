@@ -9,10 +9,13 @@
     <FrameLayout
         android:id="@+id/fc"
 
-        android:layout_width="416dp"
-        android:layout_height="669dp"
+        android:layout_width="391dp"
+        android:layout_height="636dp"
 
-        />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <Button
         android:id="@+id/bsearch"

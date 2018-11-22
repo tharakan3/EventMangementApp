@@ -161,6 +161,7 @@ public class EventActivity extends AppCompatActivity implements AdapterView.OnIt
 
         tag = dropdown.getSelectedItem().toString();
         mAddEventButton = (Button) findViewById(R.id.add_event);
+        mAddEventButton.setEnabled(false);
         autocomplete = (MultiAutoCompleteTextView)findViewById(R.id.userInvite);
         db.collection("usersnew")
                 .get()
@@ -226,6 +227,7 @@ public class EventActivity extends AppCompatActivity implements AdapterView.OnIt
                                         date.set(Calendar.MINUTE, Integer.valueOf(times[0]));
                                         date.set(Calendar.HOUR, Integer.valueOf(times[1]));
                                         mAddEventButton.setText("Update");
+                                        mAddEventButton.setEnabled(true);
                                         mAddEventButton.setOnClickListener(new View.OnClickListener() {
                                             @Override
                                             public void onClick(View view) {
@@ -377,6 +379,7 @@ public class EventActivity extends AppCompatActivity implements AdapterView.OnIt
                                                     date.set(Calendar.MINUTE, Integer.valueOf(times[0]));
                                                     date.set(Calendar.HOUR, Integer.valueOf(times[1]));
                                                     mAddEventButton.setText("Update");
+                                                    mAddEventButton.setEnabled(true);
                                                     mAddEventButton.setOnClickListener(new View.OnClickListener() {
                                                         @Override
                                                         public void onClick(View view) {
@@ -507,6 +510,7 @@ public class EventActivity extends AppCompatActivity implements AdapterView.OnIt
 
                             }
                             else{
+                                mAddEventButton.setEnabled(true);
                                 mAddEventButton.setOnClickListener(new View.OnClickListener() {
                                     @Override
                                     public void onClick(View view) {
