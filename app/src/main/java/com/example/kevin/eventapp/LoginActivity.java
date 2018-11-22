@@ -136,6 +136,10 @@ public class LoginActivity extends AppCompatActivity {
 
                                         session.setuserId(document.getId());
 
+                                            //String username = (String) docs.get("name");
+                                            session.setuserName(name);
+
+
                                         CollectionReference eventsRef = db.collection("Events");
                                         //final List<Event> events = new ArrayList<Event>();
                                         Query query = eventsRef.whereArrayContains("users", document.getId());

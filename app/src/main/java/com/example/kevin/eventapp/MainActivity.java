@@ -159,6 +159,10 @@ import static com.example.kevin.eventapp.Constants.INVALID_PASSWORD_ERROR;
                                 .hashString(mPasswordView.getText().toString(), StandardCharsets.UTF_8)
                                 .toString();
                         mNewUser.setPassword(sha256hex);
+
+                        LoginActivity.session.setuserName(mUserName.getText().toString());
+
+
                         Log.d("Activity1", "User Object created");
                         db.collection("usersnew")
                                 .add(mNewUser)
