@@ -1,7 +1,12 @@
 package com.example.kevin.eventapp;
 
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.ColorFilter;
+import android.graphics.drawable.Drawable;
+import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -23,6 +28,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static com.example.kevin.eventapp.R.color.a;
+
 public class Profile extends AppCompatActivity{
     private TextView user;
     private Button search;
@@ -38,17 +45,26 @@ public class Profile extends AppCompatActivity{
     public List<Event> invites;
     private String userid;
     private static final FirebaseFirestore db = FirebaseFirestore.getInstance();
+    Button ebutt;
+    Button ibutt;
+    TextView letter;
+    Drawable draw;
+    Color col;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.d("Activity2", "onCreate: Activity Created");
         setContentView(R.layout.activity_profile);
-        user = (TextView)findViewById(R.id.user_name);
-        //name = getIntent().getStringExtra("username");
-        //user.setText(name);
+        user = (TextView)findViewById(R.id.name);
         Session session = new Session(getApplicationContext());
         //userid = LoginActivity.session.getuserId();
         userid = session.getuserId();
+        name = session.getuserName().toString();
+        user.setText(name);
+        letter = (TextView)findViewById(R.id.letter);
+        name = "" + name.charAt(0);
+        letter.setText(name);
+
         Log.d("Activity1", "userid " + userid);
         /*search = (Button)findViewById(R.id.search);
         search.setOnClickListener(new View.OnClickListener() {
@@ -76,6 +92,31 @@ public class Profile extends AppCompatActivity{
         eventListView = (RecyclerView)findViewById(R.id.eventListView);
         eventListView.setHasFixedSize(true);
         eventListView.setLayoutManager(new LinearLayoutManager(this));
+
+        invitesListView = (RecyclerView)findViewById(R.id.InviteesListView);
+        invitesListView.setHasFixedSize(true);
+        invitesListView.setLayoutManager(new LinearLayoutManager(this));
+
+        ibutt = (Button)findViewById(R.id.invites);
+        ibutt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                invitesListView.setVisibility(View.VISIBLE);
+                eventListView.setVisibility(View.GONE);
+
+            }
+        });
+
+        ebutt = (Button)findViewById(R.id.button2);
+        ebutt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                invitesListView.setVisibility(View.GONE);
+                eventListView.setVisibility(View.VISIBLE);
+            }
+        });
+
+
 
         CollectionReference eventsRef = db.collection("Events");
         //final List<Event> events = new ArrayList<Event>();
@@ -114,9 +155,7 @@ public class Profile extends AppCompatActivity{
         });
 
 
-        invitesListView = (RecyclerView)findViewById(R.id.InviteesListView);
-        invitesListView.setHasFixedSize(true);
-        invitesListView.setLayoutManager(new LinearLayoutManager(this));
+
 
         CollectionReference eventInviteRef = db.collection("Events");
         //final List<Event> events = new ArrayList<Event>();

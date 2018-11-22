@@ -80,7 +80,7 @@ public class MapScreen extends FragmentActivity {
         bprofile.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                ip = new Intent(getApplicationContext(),Profile2.class);
+                ip = new Intent(getApplicationContext(),Profile.class);
                 startActivity(ip);
 
             }
