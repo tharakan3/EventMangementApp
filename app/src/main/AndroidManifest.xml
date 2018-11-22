@@ -26,20 +26,22 @@
             android:name="org.apache.http.legacy"
             android:required="false" />
 
-        <activity android:name=".MainActivity" />
-        <activity android:name=".Profile" />
-        <activity android:name=".EventActivity" />
-        <activity android:name=".SearchEvent" />
-        <activity android:name=".EventListActivity" />
-        <activity android:name=".LoginActivity">
+        <activity android:name=".MainActivity" android:screenOrientation="portrait"  android:label="Registration" />
+        <activity android:name=".Profile" android:screenOrientation="portrait" />
+        <activity android:name=".Profile2" />
+        <activity android:name=".EventActivity" android:screenOrientation="portrait" android:label="Create Event"/>
+        <activity android:name=".SearchEvent" android:screenOrientation="portrait" android:label="Search Event" />
+        <activity android:name=".EventListActivity" android:screenOrientation="portrait" />
+        <activity android:name=".LoginActivity"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".UpdateEvent" />
-        <activity android:name=".EventInviteActivity"></activity>
+        <activity android:name=".UpdateEvent" android:screenOrientation="portrait"/>
+        <activity android:name=".EventInviteActivity" android:screenOrientation="portrait" ></activity>
         <service android:name=".InviteNotificationService" />
 
         <!--
@@ -55,11 +57,12 @@
             android:value="@string/google_maps_key" />
 
         <activity
-            android:name=".MapScreen"
-            android:label="@string/title_activity_map_screen" />
+            android:name=".MapScreen" android:screenOrientation="portrait" />
+
         <activity
             android:name=".locationscreen"
-            android:label="@string/title_activity_locationscreen"></activity>
+            android:label="@string/title_activity_locationscreen"
+            android:screenOrientation="portrait"></activity>
     </application>
 
 </manifest>
