@@ -5,8 +5,11 @@ import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.support.annotation.NonNull;
 
 import android.app.Activity;
@@ -33,23 +36,31 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.common.hash.Hashing;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
 import static android.Manifest.permission.READ_CONTACTS;
+import static android.widget.Toast.LENGTH_LONG;
+import static com.example.kevin.eventapp.Constants.CONNECTIVITY_ERROR_MESSAGE;
+import static com.example.kevin.eventapp.Constants.EMPTY_FIELD_ERROR_MESSAGE;
+import static com.example.kevin.eventapp.Constants.WRONG_PASSWORD_ERROR_MESSAGE;
 
 /**
  * A login screen that offers login via email/password.
@@ -64,16 +75,25 @@ public class LoginActivity extends AppCompatActivity {
     private Button mRegisterButton;
     public static Session session;
     private List<Event> events;
+    private Context context;
+    private boolean isConnected;
+    private ConnectivityManager mConnectivityManager;
+    private NetworkInfo activeNetwork;
+    FirebaseFirestore db = FirebaseFirestore.getInstance();
+    /*FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
+            .setTimestampsInSnapshotsEnabled(true)
+            .build();
+    db.setFirestoreSettings(settings);*/
 
     Intent int1;
-    FirebaseFirestore db = FirebaseFirestore.getInstance();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         // Set up the login form.
         session = new Session(getApplicationContext());
-        createNotificationChannel();
+        context = getApplicationContext();
+
         mPasswordView = (EditText) findViewById(R.id.passwordLogin);
         mUserNameView = (EditText) findViewById(R.id.usernameLogin);
 
@@ -88,126 +108,92 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
         events = new ArrayList<>();
+
         mSigninButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                Query query = db.collection("usersnew").whereEqualTo("name", mUserNameView.getText().toString()).whereEqualTo("password", mPasswordView.getText().toString());
-                query.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                boolean isNetworkCnted = Utils.isNetworkConnected(context);
+                boolean isValidField = validateFields();
+                if(isNetworkCnted && isValidField){
+                    final String sha256hex = Hashing.sha256()
+                            .hashString(mPasswordView.getText().toString(), StandardCharsets.UTF_8)
+                            .toString();
+                    Query query = db.collection("usersnew").whereEqualTo("name", mUserNameView.getText().toString()).whereEqualTo("password",sha256hex);
+                    query.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                        @Override
+                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                            if (task.isSuccessful()) {
+                                for (QueryDocumentSnapshot document : task.getResult()) {
+                                    Log.d("Activity1", document.getId() + " => " + document.getData());
+                                    Map<String, Object> docs = document.getData();
+                                    String name = (String)docs.get("name");
+                                    String password = (String)docs.get("password");
 
-                        if (task.isSuccessful()) {
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                Log.d("Activity1", document.getId() + " => " + document.getData());
-                                Map<String, Object> docs = document.getData();
-                                String name = (String)docs.get("name");
-                                String password = (String)docs.get("password");
-                                if(password.equals(mPasswordView.getText().toString()))
-                                {
-                                    Intent intent = new Intent(getApplicationContext(), InviteNotificationService.class);
-                                    startService(intent);
+                                    if(password.equals(sha256hex))
+                                    {
+                                        Intent intent = new Intent(getApplicationContext(), InviteNotificationService.class);
+                                        startService(intent);
 
-                                    session.setuserId(document.getId());
-                                    Map<String, Object> userdata = document.getData();
+                                        session.setuserId(document.getId());
 
-                                    if(docs.get("name") != null) {
-                                        String username = (String) docs.get("name");
-                                        session.setuserName(username);
-                                    }
+                                        CollectionReference eventsRef = db.collection("Events");
+                                        //final List<Event> events = new ArrayList<Event>();
+                                        Query query = eventsRef.whereArrayContains("users", document.getId());
 
-                                    CollectionReference eventsRef = db.collection("Events");
-                                    //final List<Event> events = new ArrayList<Event>();
-                                    Query query = eventsRef.whereArrayContains("users", document.getId());
+                                        query.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                                            @Override
+                                            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                                                if (task.isSuccessful()) {
+                                                    for (QueryDocumentSnapshot document : task.getResult()) {
+                                                        Log.d("Activity1", document.getId() + " => " + document.getData());
+                                                        Map<String, Object> docs = document.getData();
 
-                                    query.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                                        @Override
-                                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                                            if (task.isSuccessful()) {
-                                                for (QueryDocumentSnapshot document : task.getResult()) {
-                                                    Log.d("Activity1", document.getId() + " => " + document.getData());
-                                                    Map<String, Object> docs = document.getData();
-                                                    //Event event = (Event) doc.get(document.getId());
-                                                    //if(docs.get("location") != null){
-                                                    //GeoPoint gp = (GeoPoint) docs.get("location");
-                                                    //Double dist = distanceTo(coordinates.latitude,gp.getLatitude(),coordinates.longitude, gp.getLongitude());
-                                                    //Log.d("Activity1", dist.toString());
-                                                    //if( (rangeinKm != null && coordinates != null && dist <= rangeinKm) || (rangeinKm == null || coordinates == null)){
-                                                    //Log.d("Activity1", (String)docs.get("tags"));
-                                                    Event event = new Event();
-                                                    if(docs.get("tags") != null)
-                                                        event.setTags((String)docs.get("tags"));
-                                                    if(docs.get("name") != null)
-                                                        event.setName((String)docs.get("name"));
-                                                    if(docs.get("eventId") != null)
-                                                        event.setEventId((String)docs.get("eventId"));
-                                                    if(docs.get("organiserId") != null)
-                                                        event.setOrganiserId((String)docs.get("organiserId"));
+                                                        Event event = new Event();
+                                                        if(docs.get("tags") != null)
+                                                            event.setTags((String)docs.get("tags"));
+                                                        if(docs.get("name") != null)
+                                                            event.setName((String)docs.get("name"));
+                                                        if(docs.get("eventId") != null)
+                                                            event.setEventId((String)docs.get("eventId"));
+                                                        if(docs.get("organiserId") != null)
+                                                            event.setOrganiserId((String)docs.get("organiserId"));
 
-                                                    if((docs.get("location") != null)){
-                                                        GeoPoint gp1 = (GeoPoint)docs.get("location");
-                                                        event.setLat(gp1.getLatitude());
-                                                        event.setLng(gp1.getLongitude());
+                                                        if((docs.get("location") != null)){
+                                                            GeoPoint gp1 = (GeoPoint)docs.get("location");
+                                                            event.setLat(gp1.getLatitude());
+                                                            event.setLng(gp1.getLongitude());
+                                                        }
+                                                        events.add(event);
+
                                                     }
-                                                    events.add(event);
+                                                    Intent intent = new Intent(getApplicationContext(), MapScreen.class);
+                                                    //Serializable eventList = (Serializable)events;
+                                                    Bundle bundle = new Bundle();
+                                                    bundle.putSerializable("eventlist", (Serializable) events);
+                                                    intent.putExtras(bundle);
+                                                    startActivity(intent);
 
-                                                    // }
 
-                                                    //}
-
-
-
-                                                    //events.add(event);
+                                                } else {
+                                                    Log.d("Activity1", "Error getting documents: ", task.getException());
                                                 }
-                                                Intent intent = new Intent(getApplicationContext(), MapScreen.class);
-                                                //Serializable eventList = (Serializable)events;
-                                                Bundle bundle = new Bundle();
-                                                bundle.putSerializable("eventlist", (Serializable) events);
-                                                intent.putExtras(bundle);
-                                                startActivity(intent);
-
-
-                                            } else {
-                                                Log.d("Activity1", "Error getting documents: ", task.getException());
                                             }
-                                        }
-                                    });
-
-                                    /*int1 = new Intent(getApplicationContext(),MapScreen.class);
-                                    startActivity(int1);
+                                        });
 
 
-
-                                    Bundle bundle = new Bundle();
-                                    bundle.putSerializable("eventlist", (Serializable) events);
-                                    intent.putExtras(bundle);
-                                    startActivity(intent);*/
-
-//                                    int1 = new Intent(getApplicationContext(),EventActivity.class);
-//                                    startActivity(int1);
-
-                                    /*int1 = new Intent(getApplicationContext(),SearchEvent.class);
-                                    startActivity(int1);*/
-
-
-//                                    int1 = new Intent(getApplicationContext(),Profile.class);
-//                                    //int1.putExtra("userId",(String)docs.get("userId"));
-//                                    startActivity(int1);
-
-                                   /* int1 = new Intent(getApplicationContext(),EventActivity.class);
-                                    int1.putExtra("userId",(String)docs.get("userId"));
-                                    startActivity(int1);*/
-                                    //startActivity(new Intent(getApplicationContext(),EventInviteActivity.class));
+                                    }
                                 }
-
-                                //Event event = (Event) doc.get(document.getId());
-                                //Log.d("Activity1", (String) docs.get("tags"));
-                                //events.add(event);
+                                Toast.makeText(getApplicationContext(),WRONG_PASSWORD_ERROR_MESSAGE, Toast.LENGTH_SHORT).show();
+                            } else {
+                                Log.d("Activity1", "Error getting documents: ", task.getException());
                             }
-                        } else {
-                            Log.d("Activity1", "Error getting documents: ", task.getException());
                         }
-                    }
-                });
+                    });
+                }
+                else if(!isNetworkCnted){
+                    Toast.makeText(context, CONNECTIVITY_ERROR_MESSAGE, LENGTH_LONG).show();
+                }
+
             }
         });
 
@@ -230,11 +216,18 @@ public class LoginActivity extends AppCompatActivity {
             int importance = NotificationManager.IMPORTANCE_DEFAULT;
             NotificationChannel channel = new NotificationChannel("2", name, importance);
             channel.setDescription(description);
-            // Register the channel with the system; you can't change the importance
-            // or other notification behaviors after this
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
             notificationManager.createNotificationChannel(channel);
         }
+    }
+
+    public boolean validateFields(){
+
+        if(Utils.isStringNullorEmpty(mUserNameView.getText().toString()) || Utils.isStringNullorEmpty(mPasswordView.getText().toString())){
+            Toast.makeText(getApplicationContext(),EMPTY_FIELD_ERROR_MESSAGE, Toast.LENGTH_SHORT ).show();
+            return false;
+        }
+        return true;
     }
 }
 

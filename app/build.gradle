@@ -37,6 +37,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-storage:16.0.4'
     implementation 'com.android.support:recyclerview-v7:27.0.0'
     implementation 'com.nbsp:library:1.8'
+    api 'com.google.guava:guava:26.0-android'
 }
 
 apply plugin: 'com.google.gms.google-services'

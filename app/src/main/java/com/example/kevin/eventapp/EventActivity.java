@@ -100,6 +100,7 @@ public class EventActivity extends AppCompatActivity implements AdapterView.OnIt
     private HashMap<String, String> nameIdMap;
     private HashMap<String, String> idNameMap;
     private Map<String, Object> eventMap;
+    private static Map<String, Event> eventCache;
     private List<Event> events;
     String[] tags;
     Spinner dropdown;
@@ -108,6 +109,10 @@ public class EventActivity extends AppCompatActivity implements AdapterView.OnIt
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_event);
+
+        if(eventCache == null){
+            eventCache = new HashMap<>();
+        }
         eventid = getIntent().getStringExtra("eventId");
         //userid = getIntent().getStringExtra("userId");
         userid = LoginActivity.session.getuserId();
@@ -156,9 +161,6 @@ public class EventActivity extends AppCompatActivity implements AdapterView.OnIt
 
         tag = dropdown.getSelectedItem().toString();
         mAddEventButton = (Button) findViewById(R.id.add_event);
-
-
-
         autocomplete = (MultiAutoCompleteTextView)findViewById(R.id.userInvite);
         db.collection("usersnew")
                 .get()
@@ -184,162 +186,325 @@ public class EventActivity extends AppCompatActivity implements AdapterView.OnIt
                             autocomplete.setTokenizer(new MultiAutoCompleteTextView.CommaTokenizer());
 
                             if(eventid != null){
-                                db.collection("Events").document(eventid).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                                    @Override
-                                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                                        if (task.isSuccessful()) {
-                                            DocumentSnapshot document = task.getResult();
-                                            if (document.exists()) {
-                                                eventMap = document.getData();
-                                                //sname.setText(event.get("eventName").to);
-                                                if(eventMap.get("name") != null)
-                                                    mEventName.setText(eventMap.get("name").toString());
-                                                if(eventMap.get("address") != null)
-                                                    address.setText(eventMap.get("address").toString());
-                                                if(eventMap.get("date") != null){
-                                                    Date existingDate = (Date)eventMap.get("date");
-                                                    Calendar calender = Calendar.getInstance();
-                                                    calender.setTime(existingDate);
-                                                    startDate.setText(new StringBuilder().append(calender.get(Calendar.DAY_OF_MONTH)).append("/")
-                                                            .append(calender.get(Calendar.MONTH)).append("/").append(calender.get(Calendar.YEAR)));
-                                                    time.setText("" + calender.get(Calendar.HOUR) +":" + calender.get(Calendar.MINUTE));
+                                if(eventCache.containsKey(eventid)){
+                                    Event event = eventCache.get(eventid);
+                                    if(event != null){
+                                        if(event.getName() != null)
+                                            mEventName.setText(event.getName());
+                                        if(event.getAddress() != null)
+                                            address.setText(event.getAddress());
+                                        if(event.getDate() != null){
+                                            Date existingDate = (Date)event.getDate();
+                                            Calendar calender = Calendar.getInstance();
+                                            calender.setTime(existingDate);
+                                            startDate.setText(new StringBuilder().append(calender.get(Calendar.DAY_OF_MONTH)).append("/")
+                                                    .append(calender.get(Calendar.MONTH)).append("/").append(calender.get(Calendar.YEAR)));
+                                            time.setText("" + calender.get(Calendar.HOUR) +":" + calender.get(Calendar.MINUTE));
+                                        }
+                                        if(event.getInvitees() != null){
+                                            List<String> invites = (List<String>) event.getInvitees();
+                                            StringBuilder invts = new StringBuilder();
+                                            for(String user : invites){
+                                                if(!user.equals(userid))
+                                                    invts.append(idNameMap.get(user)+ ", ");
+                                            }
+                                            autocomplete.setText(invts.toString());
+                                        }
+                                        if(event.getTags() != null){
+                                            String tag = event.getTags();
+                                            for(int i = 0; i< tags.length; i++){
+                                                if(tags[i].equals(tag)){
+                                                    dropdown.setSelection(i);
                                                 }
-                                                if(eventMap.get("users") != null){
-                                                    List<String> invites = (List<String>) eventMap.get("invitees");
-                                                    StringBuilder invts = new StringBuilder();
-                                                    for(String user : invites){
-                                                        if(!user.equals(userid))
-                                                            invts.append(idNameMap.get(user)+ ", ");
-                                                    }
-                                                    autocomplete.setText(invts.toString());
+                                            }
+                                        }
+                                        String [] dates = startDate.getText().toString().split("/");
+                                        date.set(Calendar.DAY_OF_MONTH, Integer.valueOf(dates[0]));
+                                        date.set(Calendar.MONTH, Integer.valueOf(dates[1]));
+                                        date.set(Calendar.YEAR, Integer.valueOf(dates[2]));
+                                        String [] times = time.getText().toString().split(":");
+                                        date.set(Calendar.MINUTE, Integer.valueOf(times[0]));
+                                        date.set(Calendar.HOUR, Integer.valueOf(times[1]));
+                                        mAddEventButton.setText("Update");
+                                        mAddEventButton.setOnClickListener(new View.OnClickListener() {
+                                            @Override
+                                            public void onClick(View view) {
+
+                                                userid = getIntent().getStringExtra("userId");
+
+                                                String adr = address.getText().toString();
+                                                try {
+                                                    addressList = geo.getFromLocationName(adr,3);
+                                                } catch (IOException e) {
+                                                    e.printStackTrace();
                                                 }
-                                                if(eventMap.get("tags") != null){
-                                                    String tag = (String)eventMap.get("tags");
-                                                    for(int i = 0; i< tags.length; i++){
-                                                        if(tags[i].equals(tag)){
-                                                            dropdown.setSelection(i);
-                                                        }
-                                                    }
+                                                e1 = addressList.get(0);
+                                                final LatLng e2 = new LatLng(e1.getLatitude(),e1.getLongitude());
+                                                //List<String> userids = new ArrayList<String>();
+                                                List<String> invitees = new ArrayList<String>();
+                                                String [] names = autocomplete.getText().toString().split(", ");
+                                                //String[] id = new String[nameIdMap.size()];
+
+                                                for(String name : names){
+                                                    String id = nameIdMap.get(name);
+                                                    if(id != null)
+                                                        invitees.add(id);
                                                 }
-                                                String [] dates = startDate.getText().toString().split("/");
-                                                date.set(Calendar.DAY_OF_MONTH, Integer.valueOf(dates[0]));
-                                                date.set(Calendar.MONTH, Integer.valueOf(dates[1]));
-                                                date.set(Calendar.YEAR, Integer.valueOf(dates[2]));
-                                                String [] times = time.getText().toString().split(":");
-                                                date.set(Calendar.MINUTE, Integer.valueOf(times[0]));
-                                                date.set(Calendar.HOUR, Integer.valueOf(times[1]));
-                                                mAddEventButton.setText("Update");
-                                                mAddEventButton.setOnClickListener(new View.OnClickListener() {
+                                                //final String eventid =
+                                                String nameUpdate, addressUpdate, tagUpdate;
+                                                nameUpdate =  mEventName.getText().toString();
+                                                addressUpdate = address.getText().toString();
+                                                tagUpdate = dropdown.getSelectedItem().toString();
+                                                GeoPoint locationUpdate = new GeoPoint(e2.latitude, e2.longitude);
+                                                Date dateUpdate = new Date(date.getTimeInMillis());
+                                                Event eventToCache = new Event();
+                                                eventToCache.setName(nameUpdate);
+                                                eventToCache.setTags(tagUpdate);
+                                                eventToCache.setAddress(addressUpdate);
+                                                eventToCache.setLocation(locationUpdate);
+                                                eventToCache.setDate(dateUpdate);
+                                                eventToCache.setInvitees(invitees);
+                                                eventCache.put(eventid, eventToCache);
+
+                                                db.collection("Events").document(eventid).update("name", mEventName.getText().toString(), "address",address.getText().toString(),"date", new Date(date.getTimeInMillis()),"location", new GeoPoint(e2.latitude, e2.longitude),"tags", dropdown.getSelectedItem().toString(),"invitees", FieldValue.arrayUnion(invitees.toArray())).addOnSuccessListener(new OnSuccessListener<Void>() {
                                                     @Override
-                                                    public void onClick(View view) {
-
-                                                        userid = getIntent().getStringExtra("userId");
-
-                                                        String adr = address.getText().toString();
-                                                        try {
-                                                            addressList = geo.getFromLocationName(adr,3);
-                                                        } catch (IOException e) {
-                                                            e.printStackTrace();
-                                                        }
-                                                        e1 = addressList.get(0);
-                                                        final LatLng e2 = new LatLng(e1.getLatitude(),e1.getLongitude());
-                                                        //List<String> userids = new ArrayList<String>();
-                                                        List<String> invitees = new ArrayList<String>();
-                                                        String [] names = autocomplete.getText().toString().split(", ");
-                                                        //String[] id = new String[nameIdMap.size()];
-
-                                                        for(String name : names){
-                                                            String id = nameIdMap.get(name);
-                                                            if(id != null)
-                                                                invitees.add(id);
-                                                        }
-                                                        //final String eventid =
-                                                        db.collection("Events").document(eventid).update("name", mEventName.getText().toString(), "address",address.getText().toString(),"date", new Date(date.getTimeInMillis()),"location", new GeoPoint(e2.latitude, e2.longitude),"tags", dropdown.getSelectedItem().toString(),"invitees", FieldValue.arrayUnion(invitees.toArray())).addOnSuccessListener(new OnSuccessListener<Void>() {
-                                                            @Override
-                                                            public void onSuccess(Void aVoid) {
-                                                                Log.d("Acitivity1", "DocumentSnapshot successfully updated!");
+                                                    public void onSuccess(Void aVoid) {
+                                                        Log.d("Acitivity1", "DocumentSnapshot successfully updated!");
 //                                                                Intent profile = new Intent(getApplicationContext(), Profile.class);
 //                                                                profile.putExtra("userId", userid);
 //                                                                EventActivity.this.startActivity(profile);
 
-                                                                CollectionReference eventsRef = db.collection("Events");
-                                                                //final List<Event> events = new ArrayList<Event>();
-                                                                Query query = eventsRef.whereArrayContains("users", userid);
-                                                                events = new ArrayList<>();
-                                                                query.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                                                                    @Override
-                                                                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                                                                        if (task.isSuccessful()) {
-                                                                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                                                                Log.d("Activity1", document.getId() + " => " + document.getData());
-                                                                                Map<String, Object> docs = document.getData();
-                                                                                //Event event = (Event) doc.get(document.getId());
-                                                                                //if(docs.get("location") != null){
-                                                                                //GeoPoint gp = (GeoPoint) docs.get("location");
-                                                                                //Double dist = distanceTo(coordinates.latitude,gp.getLatitude(),coordinates.longitude, gp.getLongitude());
-                                                                                //Log.d("Activity1", dist.toString());
-                                                                                //if( (rangeinKm != null && coordinates != null && dist <= rangeinKm) || (rangeinKm == null || coordinates == null)){
-                                                                                //Log.d("Activity1", (String)docs.get("tags"));
-                                                                                Event event = new Event();
-                                                                                if(docs.get("tags") != null)
-                                                                                    event.setTags((String)docs.get("tags"));
-                                                                                if(docs.get("name") != null)
-                                                                                    event.setName((String)docs.get("name"));
-                                                                                if(docs.get("eventId") != null)
-                                                                                    event.setEventId((String)docs.get("eventId"));
-                                                                                if(docs.get("organiserId") != null)
-                                                                                    event.setOrganiserId((String)docs.get("organiserId"));
+                                                        CollectionReference eventsRef = db.collection("Events");
+                                                        //final List<Event> events = new ArrayList<Event>();
+                                                        Query query = eventsRef.whereArrayContains("users", userid);
+                                                        events = new ArrayList<>();
+                                                        query.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                                                            @Override
+                                                            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                                                                if (task.isSuccessful()) {
+                                                                    for (QueryDocumentSnapshot document : task.getResult()) {
+                                                                        Log.d("Activity1", document.getId() + " => " + document.getData());
+                                                                        Map<String, Object> docs = document.getData();
+                                                                        Event event = new Event();
+                                                                        if(docs.get("tags") != null)
+                                                                            event.setTags((String)docs.get("tags"));
+                                                                        if(docs.get("name") != null)
+                                                                            event.setName((String)docs.get("name"));
+                                                                        if(docs.get("eventId") != null)
+                                                                            event.setEventId((String)docs.get("eventId"));
+                                                                        if(docs.get("organiserId") != null)
+                                                                            event.setOrganiserId((String)docs.get("organiserId"));
 
-                                                                                if((docs.get("location") != null)){
-                                                                                    GeoPoint gp1 = (GeoPoint)docs.get("location");
-                                                                                    event.setLat(gp1.getLatitude());
-                                                                                    event.setLng(gp1.getLongitude());
-                                                                                }
-
-                                                                                events.add(event);
-
-                                                                                // }
-
-                                                                                //}
-
-
-
-                                                                                //events.add(event);
-                                                                            }
-                                                                            Intent intent = new Intent(getApplicationContext(), MapScreen.class);
-                                                                            //Serializable eventList = (Serializable)events;
-                                                                            Bundle bundle = new Bundle();
-                                                                            bundle.putSerializable("eventlist", (Serializable) events);
-                                                                            intent.putExtras(bundle);
-                                                                            startActivity(intent);
-
-
-                                                                        } else {
-                                                                            Log.d("Activity1", "Error getting documents: ", task.getException());
+                                                                        if((docs.get("location") != null)){
+                                                                            GeoPoint gp1 = (GeoPoint)docs.get("location");
+                                                                            event.setLat(gp1.getLatitude());
+                                                                            event.setLng(gp1.getLongitude());
                                                                         }
+
+                                                                        events.add(event);
+
                                                                     }
-                                                                });
+                                                                    Intent intent = new Intent(getApplicationContext(), MapScreen.class);
+                                                                    //Serializable eventList = (Serializable)events;
+                                                                    Bundle bundle = new Bundle();
+                                                                    bundle.putSerializable("eventlist", (Serializable) events);
+                                                                    intent.putExtras(bundle);
+                                                                    startActivity(intent);
+
+
+                                                                } else {
+                                                                    Log.d("Activity1", "Error getting documents: ", task.getException());
+                                                                }
                                                             }
-                                                        })
-                                                                .addOnFailureListener(new OnFailureListener() {
-                                                                    @Override
-                                                                    public void onFailure(@NonNull Exception e) {
-                                                                        Log.w("", "Error updating document", e);
-                                                                    }
-                                                                });
-
+                                                        });
                                                     }
-                                                });
+                                                })
+                                                        .addOnFailureListener(new OnFailureListener() {
+                                                            @Override
+                                                            public void onFailure(@NonNull Exception e) {
+                                                                Log.w("", "Error updating document", e);
+                                                            }
+                                                        });
 
-                                                Log.d("", "DocumentSnapshot data: " + document.getData());
-                                            } else {
-                                                Log.d("", "No such document");
                                             }
-                                        } else {
-                                            Log.d("", "get failed with ", task.getException());
-                                        }
+                                        });
+
                                     }
-                                });
+                                }
+                                else{
+                                    db.collection("Events").document(eventid).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                        @Override
+                                        public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                                            if (task.isSuccessful()) {
+                                                DocumentSnapshot document = task.getResult();
+                                                if (document.exists()) {
+                                                    eventMap = document.getData();
+                                                    //sname.setText(event.get("eventName").to);
+                                                    if(eventMap.get("name") != null)
+                                                        mEventName.setText(eventMap.get("name").toString());
+                                                    if(eventMap.get("address") != null)
+                                                        address.setText(eventMap.get("address").toString());
+                                                    if(eventMap.get("date") != null){
+                                                        Date existingDate = (Date)eventMap.get("date");
+                                                        Calendar calender = Calendar.getInstance();
+                                                        calender.setTime(existingDate);
+                                                        startDate.setText(new StringBuilder().append(calender.get(Calendar.DAY_OF_MONTH)).append("/")
+                                                                .append(calender.get(Calendar.MONTH)).append("/").append(calender.get(Calendar.YEAR)));
+                                                        time.setText("" + calender.get(Calendar.HOUR) +":" + calender.get(Calendar.MINUTE));
+                                                    }
+                                                    if(eventMap.get("users") != null){
+                                                        List<String> invites = (List<String>) eventMap.get("invitees");
+                                                        StringBuilder invts = new StringBuilder();
+                                                        for(String user : invites){
+                                                            if(!user.equals(userid))
+                                                                invts.append(idNameMap.get(user)+ ", ");
+                                                        }
+                                                        autocomplete.setText(invts.toString());
+                                                    }
+                                                    if(eventMap.get("tags") != null){
+                                                        String tag = (String)eventMap.get("tags");
+                                                        for(int i = 0; i< tags.length; i++){
+                                                            if(tags[i].equals(tag)){
+                                                                dropdown.setSelection(i);
+                                                            }
+                                                        }
+                                                    }
+                                                    String [] dates = startDate.getText().toString().split("/");
+                                                    date.set(Calendar.DAY_OF_MONTH, Integer.valueOf(dates[0]));
+                                                    date.set(Calendar.MONTH, Integer.valueOf(dates[1]));
+                                                    date.set(Calendar.YEAR, Integer.valueOf(dates[2]));
+                                                    String [] times = time.getText().toString().split(":");
+                                                    date.set(Calendar.MINUTE, Integer.valueOf(times[0]));
+                                                    date.set(Calendar.HOUR, Integer.valueOf(times[1]));
+                                                    mAddEventButton.setText("Update");
+                                                    mAddEventButton.setOnClickListener(new View.OnClickListener() {
+                                                        @Override
+                                                        public void onClick(View view) {
+
+                                                            userid = getIntent().getStringExtra("userId");
+
+                                                            String adr = address.getText().toString();
+                                                            try {
+                                                                addressList = geo.getFromLocationName(adr,3);
+                                                            } catch (IOException e) {
+                                                                e.printStackTrace();
+                                                            }
+                                                            e1 = addressList.get(0);
+                                                            final LatLng e2 = new LatLng(e1.getLatitude(),e1.getLongitude());
+                                                            //List<String> userids = new ArrayList<String>();
+                                                            List<String> invitees = new ArrayList<String>();
+                                                            String [] names = autocomplete.getText().toString().split(", ");
+                                                            //String[] id = new String[nameIdMap.size()];
+
+                                                            for(String name : names){
+                                                                String id = nameIdMap.get(name);
+                                                                if(id != null)
+                                                                    invitees.add(id);
+                                                            }
+
+                                                            String nameUpdate, addressUpdate, tagUpdate;
+                                                            nameUpdate =  mEventName.getText().toString();
+                                                            addressUpdate = address.getText().toString();
+                                                            tagUpdate = dropdown.getSelectedItem().toString();
+                                                            GeoPoint locationUpdate = new GeoPoint(e2.latitude, e2.longitude);
+                                                            Date dateUpdate = new Date(date.getTimeInMillis());
+                                                            Event eventToCache = new Event();
+                                                            eventToCache.setName(nameUpdate);
+                                                            eventToCache.setTags(tagUpdate);
+                                                            eventToCache.setAddress(addressUpdate);
+                                                            eventToCache.setLocation(locationUpdate);
+                                                            eventToCache.setDate(dateUpdate);
+                                                            eventToCache.setInvitees(invitees);
+                                                            eventCache.put(eventid, eventToCache);
+
+                                                            db.collection("Events").document(eventid).update("name", nameUpdate, "address",addressUpdate,"date", dateUpdate,"location", locationUpdate,"tags", tagUpdate,"invitees", FieldValue.arrayUnion(invitees.toArray())).addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                                @Override
+                                                                public void onSuccess(Void aVoid) {
+                                                                    Log.d("Acitivity1", "DocumentSnapshot successfully updated!");
+//                                                                Intent profile = new Intent(getApplicationContext(), Profile.class);
+//                                                                profile.putExtra("userId", userid);
+//                                                                EventActivity.this.startActivity(profile);
+
+                                                                    CollectionReference eventsRef = db.collection("Events");
+                                                                    //final List<Event> events = new ArrayList<Event>();
+                                                                    Query query = eventsRef.whereArrayContains("users", userid);
+                                                                    events = new ArrayList<>();
+                                                                    query.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                                                                        @Override
+                                                                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                                                                            if (task.isSuccessful()) {
+                                                                                for (QueryDocumentSnapshot document : task.getResult()) {
+                                                                                    Log.d("Activity1", document.getId() + " => " + document.getData());
+                                                                                    Map<String, Object> docs = document.getData();
+                                                                                    //Event event = (Event) doc.get(document.getId());
+                                                                                    //if(docs.get("location") != null){
+                                                                                    //GeoPoint gp = (GeoPoint) docs.get("location");
+                                                                                    //Double dist = distanceTo(coordinates.latitude,gp.getLatitude(),coordinates.longitude, gp.getLongitude());
+                                                                                    //Log.d("Activity1", dist.toString());
+                                                                                    //if( (rangeinKm != null && coordinates != null && dist <= rangeinKm) || (rangeinKm == null || coordinates == null)){
+                                                                                    //Log.d("Activity1", (String)docs.get("tags"));
+                                                                                    Event event = new Event();
+                                                                                    if(docs.get("tags") != null)
+                                                                                        event.setTags((String)docs.get("tags"));
+                                                                                    if(docs.get("name") != null)
+                                                                                        event.setName((String)docs.get("name"));
+                                                                                    if(docs.get("eventId") != null)
+                                                                                        event.setEventId((String)docs.get("eventId"));
+                                                                                    if(docs.get("organiserId") != null)
+                                                                                        event.setOrganiserId((String)docs.get("organiserId"));
+
+                                                                                    if((docs.get("location") != null)){
+                                                                                        GeoPoint gp1 = (GeoPoint)docs.get("location");
+                                                                                        event.setLat(gp1.getLatitude());
+                                                                                        event.setLng(gp1.getLongitude());
+                                                                                    }
+
+                                                                                    events.add(event);
+
+                                                                                    // }
+
+                                                                                    //}
+
+
+
+                                                                                    //events.add(event);
+                                                                                }
+                                                                                Intent intent = new Intent(getApplicationContext(), MapScreen.class);
+                                                                                //Serializable eventList = (Serializable)events;
+                                                                                Bundle bundle = new Bundle();
+                                                                                bundle.putSerializable("eventlist", (Serializable) events);
+                                                                                intent.putExtras(bundle);
+                                                                                startActivity(intent);
+
+
+                                                                            } else {
+                                                                                Log.d("Activity1", "Error getting documents: ", task.getException());
+                                                                            }
+                                                                        }
+                                                                    });
+                                                                }
+                                                            })
+                                                                    .addOnFailureListener(new OnFailureListener() {
+                                                                        @Override
+                                                                        public void onFailure(@NonNull Exception e) {
+                                                                            Log.w("", "Error updating document", e);
+                                                                        }
+                                                                    });
+
+                                                        }
+                                                    });
+
+                                                    Log.d("", "DocumentSnapshot data: " + document.getData());
+                                                } else {
+                                                    Log.d("", "No such document");
+                                                }
+                                            } else {
+                                                Log.d("", "get failed with ", task.getException());
+                                            }
+                                        }
+                                    });
+                                }
+
                             }
                             else{
                                 mAddEventButton.setOnClickListener(new View.OnClickListener() {

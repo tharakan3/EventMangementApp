@@ -3,7 +3,6 @@ package com.example.kevin.eventapp;
 import android.Manifest;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
-import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -11,24 +10,24 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.DialogFragment;
-import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.text.format.DateFormat;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.TimePicker;
 import android.widget.Toast;
 
+import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.CollectionReference;
@@ -37,7 +36,6 @@ import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
-import com.google.android.gms.maps.model.LatLng;
 
 import java.io.Serializable;
 import java.text.ParseException;
@@ -49,11 +47,11 @@ import java.util.List;
 import java.util.Map;
 
 import static android.widget.Toast.LENGTH_LONG;
-import static android.widget.Toast.LENGTH_SHORT;
 import static com.example.kevin.eventapp.Constants.CONNECTIVITY_ERROR_MESSAGE;
 
-public class SearchEvent extends AppCompatActivity {
 
+
+public class SearchFragment extends Fragment{
 
     private String userid;
     FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -78,18 +76,24 @@ public class SearchEvent extends AppCompatActivity {
     Date datefield ;
     Double rangeinKm = 15d;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_search_event);
-        sname = (EditText)findViewById(R.id.sname);
-        stag = (EditText)findViewById(R.id.stags);
-        search = (Button)findViewById(R.id.searchEvent);
-        date = Calendar.getInstance();
-        sDate = (EditText) findViewById(R.id.sdate_input);
-        msetDateButton = (Button) findViewById((R.id.scal));
 
-        Session session = new Session(getApplicationContext());
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
+
+        View view = inflater.inflate(R.layout.activity_search_event, container, false);
+        //MapScreen mapScreen = (MapScreen) getActivity();
+
+        events = new ArrayList<>();
+        sname = (EditText)view.findViewById(R.id.sname);
+        stag = (EditText)view.findViewById(R.id.stags);
+        search = (Button)view.findViewById(R.id.searchEvent);
+        date = Calendar.getInstance();
+        sDate = (EditText)view.findViewById(R.id.sdate_input);
+        msetDateButton = (Button)view.findViewById((R.id.scal));
+
+        Session session = new Session(getContext());
         //userid = LoginActivity.session.getuserId();
         userid = session.getuserId();
 
@@ -103,8 +107,8 @@ public class SearchEvent extends AppCompatActivity {
 
         events = new ArrayList<>();
 
-        sek = (SeekBar)findViewById(R.id.seekBar2);
-        sektxt = (TextView)findViewById(R.id.slidertext);
+        sek = (SeekBar)view.findViewById(R.id.seekBar2);
+        sektxt = (TextView)view.findViewById(R.id.slidertext);
         sek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             int progress;
             @Override
@@ -127,10 +131,10 @@ public class SearchEvent extends AppCompatActivity {
         });
 
 
-        l3 = (LocationManager)this.getSystemService(Context.LOCATION_SERVICE);
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        l3 = (LocationManager)getContext().getSystemService(Context.LOCATION_SERVICE);
+        if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
-            ActivityCompat.requestPermissions(this, new String[]{
+            ActivityCompat.requestPermissions(getActivity(), new String[]{
                     Manifest.permission.ACCESS_COARSE_LOCATION,
                     Manifest.permission.ACCESS_FINE_LOCATION
             }, 1);
@@ -139,7 +143,7 @@ public class SearchEvent extends AppCompatActivity {
             //                                          int[] grantResults)
             // to handle the case where the user grants the permission. See the documentation
             // for ActivityCompat#requestPermissions for more details.
-            return;
+            return view;
         }
 
 
@@ -166,7 +170,7 @@ public class SearchEvent extends AppCompatActivity {
                 search.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        if(Utils.isNetworkConnected(getApplicationContext())){
+                        if(Utils.isNetworkConnected(getContext())){
                             String dateStr = sDate.getText().toString();
                             SimpleDateFormat sdf = new SimpleDateFormat("yyy/mm/dd");
                             datefield  = null;
@@ -187,9 +191,7 @@ public class SearchEvent extends AppCompatActivity {
                                 query = query.whereEqualTo("tags",tags);
                             }
 
-//                        if(name != null && !"".equals(sname.getText().toString())){
-//                            query = query.whereEqualTo("name",sname.getText().toString());
-//                        }
+
 
                             if(datefield != null ){
                                 query = query.whereGreaterThan("date",datefield);
@@ -203,7 +205,7 @@ public class SearchEvent extends AppCompatActivity {
                                     if (task.isSuccessful()) {
                                         for (QueryDocumentSnapshot document : task.getResult()) {
                                             Log.d("Activity1", document.getId() + " => " + document.getData());
-                                            Map<String, Object> docs = document.getData();
+                                            java.util.Map<String, Object> docs = document.getData();
                                             //Event event = (Event) doc.get(document.getId());
                                             //if(docs.get("location") != null){
                                             GeoPoint gp = (GeoPoint) docs.get("location");
@@ -230,22 +232,29 @@ public class SearchEvent extends AppCompatActivity {
                                                 events.add(event);
                                             }
 
-
-                                            // }
-
-                                            //}
-
-
-
-                                            //events.add(event);
                                         }
-                                        Intent intent = new Intent(getApplicationContext(), MapScreen.class);
+                                        /*Intent intent = new Intent(getContext(), MapScreen.class);
                                         //Serializable eventList = (Serializable)events;
                                         Bundle bundle = new Bundle();
                                         bundle.putSerializable("eventlist", (Serializable) events);
                                         intent.putExtras(bundle);
-                                        startActivity(intent);
+                                        startActivity(intent);*/
+                                        MapScreen.events = events;
 
+                                        FragmentManager Fm  = getFragmentManager();
+                                        //Fragment frag = new Map();
+
+
+                                        List<Fragment> fragments = Fm.getFragments();
+                                        for(Fragment fragment : fragments){
+                                            if(fragment instanceof com.example.kevin.eventapp.Map ){
+                                                ((com.example.kevin.eventapp.Map) fragment).setMarkersAfterSearch();
+                                                Fm.beginTransaction().show(fragment).commit();
+                                            }
+                                            else if(fragment instanceof SearchFragment){
+                                                Fm.beginTransaction().remove(fragment).commit();
+                                            }
+                                        }
 
                                     } else {
                                         Log.d("Activity1", "Error getting documents: ", task.getException());
@@ -254,7 +263,7 @@ public class SearchEvent extends AppCompatActivity {
                             });
                         }
                         else{
-                            Toast.makeText(getApplicationContext(), CONNECTIVITY_ERROR_MESSAGE, LENGTH_LONG).show();
+                            Toast.makeText(getContext(), CONNECTIVITY_ERROR_MESSAGE, LENGTH_LONG).show();
                         }
 
 
@@ -284,7 +293,7 @@ public class SearchEvent extends AppCompatActivity {
         search.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(Utils.isNetworkConnected(getApplicationContext())){
+                if(Utils.isNetworkConnected(getContext())){
                     String dateStr = sDate.getText().toString();
                     SimpleDateFormat sdf = new SimpleDateFormat("yyy/mm/dd");
                     datefield  = null;
@@ -358,7 +367,7 @@ public class SearchEvent extends AppCompatActivity {
 
                                     //events.add(event);
                                 }
-                                Intent intent = new Intent(getApplicationContext(), MapScreen.class);
+                                Intent intent = new Intent(getContext(), MapScreen.class);
                                 //Serializable eventList = (Serializable)events;
                                 Bundle bundle = new Bundle();
                                 bundle.putSerializable("eventlist", (Serializable) events);
@@ -373,7 +382,7 @@ public class SearchEvent extends AppCompatActivity {
                     });
                 }
                 else{
-                    Toast.makeText(getApplicationContext(), CONNECTIVITY_ERROR_MESSAGE, LENGTH_LONG).show();
+                    Toast.makeText(getContext(), CONNECTIVITY_ERROR_MESSAGE, LENGTH_LONG).show();
                 }
 
 
@@ -381,14 +390,14 @@ public class SearchEvent extends AppCompatActivity {
         });
 
 
+
+        return view;
     }
-
-
 
 
     public void showDatePickerDialog(View v) {
         DialogFragment newFragment = new SearchEvent.DatePickerFragment();
-        newFragment.show(getSupportFragmentManager(), "datePicker");
+        newFragment.show(getActivity().getSupportFragmentManager(), "datePicker");
     }
 
     public static class DatePickerFragment extends DialogFragment
@@ -462,7 +471,4 @@ public class SearchEvent extends AppCompatActivity {
 
         return new double[]{radiansToDegrees(minLat),radiansToDegrees(minLon),radiansToDegrees(maxLat),radiansToDegrees(maxLon)};
     }
-
-
-
 }
